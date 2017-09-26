@@ -1,0 +1,53 @@
+{
+  "arch": "x86_64",
+  "auth": null,
+  "build": "np111py27_0",
+  "build_number": 0,
+  "channel": "https://repo.continuum.io/pkgs/free/linux-64",
+  "date": "2017-02-13",
+  "depends": [
+    "mkl 2017.0.*",
+    "numpy 1.11*",
+    "python 2.7*"
+  ],
+  "files": [
+    "lib/python2.7/site-packages/numexpr-2.6.2-py2.7.egg-info",
+    "lib/python2.7/site-packages/numexpr/__config__.py",
+    "lib/python2.7/site-packages/numexpr/__config__.pyc",
+    "lib/python2.7/site-packages/numexpr/__init__.py",
+    "lib/python2.7/site-packages/numexpr/__init__.pyc",
+    "lib/python2.7/site-packages/numexpr/cpuinfo.py",
+    "lib/python2.7/site-packages/numexpr/cpuinfo.pyc",
+    "lib/python2.7/site-packages/numexpr/expressions.py",
+    "lib/python2.7/site-packages/numexpr/expressions.pyc",
+    "lib/python2.7/site-packages/numexpr/interpreter.so",
+    "lib/python2.7/site-packages/numexpr/necompiler.py",
+    "lib/python2.7/site-packages/numexpr/necompiler.pyc",
+    "lib/python2.7/site-packages/numexpr/tests/__init__.py",
+    "lib/python2.7/site-packages/numexpr/tests/__init__.pyc",
+    "lib/python2.7/site-packages/numexpr/tests/test_numexpr.py",
+    "lib/python2.7/site-packages/numexpr/tests/test_numexpr.pyc",
+    "lib/python2.7/site-packages/numexpr/utils.py",
+    "lib/python2.7/site-packages/numexpr/utils.pyc",
+    "lib/python2.7/site-packages/numexpr/version.py",
+    "lib/python2.7/site-packages/numexpr/version.pyc"
+  ],
+  "fn": "numexpr-2.6.2-np111py27_0.tar.bz2",
+  "license": "MIT",
+  "link": {
+    "source": "/home/ubuntu/anaconda2/pkgs/numexpr-2.6.2-np111py27_0",
+    "type": 1
+  },
+  "md5": "f2d48a3c2db1d1f67a4dd82009c25bfe",
+  "name": "numexpr",
+  "noarch": null,
+  "platform": "linux",
+  "preferred_env": null,
+  "priority": 1,
+  "schannel": "defaults",
+  "size": 361193,
+  "subdir": "linux-64",
+  "url": "https://repo.continuum.io/pkgs/free/linux-64/numexpr-2.6.2-np111py27_0.tar.bz2",
+  "version": "2.6.2",
+  "with_features_depends": {}
+}

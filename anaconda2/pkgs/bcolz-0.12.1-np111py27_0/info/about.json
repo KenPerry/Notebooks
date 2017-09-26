@@ -1,0 +1,5 @@
+{
+  "home": "https://github.com/Blosc/bcolz", 
+  "license": "BSD License", 
+  "summary": "columnar and compressed data containers."
+}

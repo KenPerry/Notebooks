@@ -1,0 +1,18 @@
+{
+  "arch": "x86_64", 
+  "build": "0", 
+  "build_number": 0, 
+  "depends": [
+    "fontconfig 2.12.*", 
+    "freetype 2.5.*", 
+    "libpng >=1.6.27,<1.7", 
+    "pixman 0.34.*", 
+    "zlib 1.2.*"
+  ], 
+  "license": "LGPL 2.1, MPL 1.1", 
+  "license_family": "LGPL", 
+  "name": "cairo", 
+  "platform": "linux", 
+  "subdir": "linux-64", 
+  "version": "1.14.8"
+}

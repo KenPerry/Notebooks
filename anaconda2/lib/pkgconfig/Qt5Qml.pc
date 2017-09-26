@@ -1,0 +1,14 @@
+prefix=/home/ubuntu/anaconda2
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include/qt
+
+
+Name: Qt5 Qml
+Description: Qt Qml module
+Version: 5.6.2
+Libs: -lQt5Qml 
+Libs.private:  -lQt5Network -L/home/ubuntu/anaconda2/lib -lQt5Core -lpthread -lrt  
+Cflags: -I${includedir}/QtQml -I${includedir}
+Requires: Qt5Core Qt5Network
+

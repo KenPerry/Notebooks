@@ -1,0 +1,16 @@
+{
+  "arch": "x86_64", 
+  "build": "1", 
+  "build_number": 1, 
+  "depends": [
+    "libffi >=3.2.1", 
+    "pcre 8.39", 
+    "zlib"
+  ], 
+  "license": "LGPL", 
+  "license_family": "LGPL", 
+  "name": "glib", 
+  "platform": "linux", 
+  "subdir": "linux-64", 
+  "version": "2.50.2"
+}

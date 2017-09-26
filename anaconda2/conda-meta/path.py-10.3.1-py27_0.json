@@ -1,0 +1,26 @@
+{
+  "arch": "x86_64", 
+  "build": "py27_0", 
+  "build_number": 0, 
+  "depends": [
+    "python 2.7*"
+  ], 
+  "files": [
+    "lib/python2.7/site-packages/path.py", 
+    "lib/python2.7/site-packages/path.pyc", 
+    "lib/python2.7/site-packages/test_path.py", 
+    "lib/python2.7/site-packages/test_path.pyc"
+  ], 
+  "installed_by": "Anaconda2-4.4.0-Linux-x86_64", 
+  "license": "MIT", 
+  "link": {
+    "source": "/home/ubuntu/anaconda2/pkgs/path.py-10.3.1-py27_0", 
+    "type": "hard-link"
+  }, 
+  "md5": "8fc0f60622d6310ea7bdb9bddc6459a9", 
+  "name": "path.py", 
+  "platform": "linux", 
+  "subdir": "linux-64", 
+  "url": "https://repo.continuum.io/pkgs/free/linux-64/path.py-10.3.1-py27_0.tar.bz2", 
+  "version": "10.3.1"
+}

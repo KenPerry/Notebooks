@@ -1,0 +1,13 @@
+{
+  "arch": "x86_64", 
+  "build": "0", 
+  "build_number": 0, 
+  "depends": [
+    "expat"
+  ], 
+  "license": "GPL2", 
+  "name": "dbus", 
+  "platform": "linux", 
+  "subdir": "linux-64", 
+  "version": "1.10.10"
+}

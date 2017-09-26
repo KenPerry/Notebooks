@@ -1,0 +1,2 @@
+model_checkpoint_path: "Tensorflow+Tutorial_save"
+all_model_checkpoint_paths: "Tensorflow+Tutorial_save"

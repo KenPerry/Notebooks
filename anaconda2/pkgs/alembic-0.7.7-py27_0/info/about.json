@@ -1,0 +1,5 @@
+{
+  "home": "http://bitbucket.org/zzzeek/alembic", 
+  "license": "MIT", 
+  "summary": "A database migration tool for SQLAlchemy."
+}

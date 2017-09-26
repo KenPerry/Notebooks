@@ -1,0 +1,14 @@
+prefix=/home/ubuntu/anaconda2
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include/qt
+
+
+Name: Qt5 Help
+Description: Qt Help module
+Version: 5.6.2
+Libs: -lQt5Help 
+Libs.private:  -lQt5Widgets -L/home/ubuntu/anaconda2/lib -lQt5Gui -lQt5Core -lpthread -lQt5Network  -L/home/ubuntu/anaconda2/lib -lQt5Sql  -lQt5CLucene -lQt5Core -lpthread -lGL  
+Cflags: -I${includedir}/QtHelp -I${includedir}
+Requires: Qt5Core Qt5Gui Qt5Widgets
+

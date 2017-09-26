@@ -1,0 +1,5 @@
+{
+  "home": "https://github.com/amitdev/lru-dict", 
+  "license": "MIT License", 
+  "summary": "A fast and memory efficient LRU cache."
+}

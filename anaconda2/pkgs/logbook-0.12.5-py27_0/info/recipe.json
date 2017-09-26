@@ -1,0 +1,47 @@
+{
+  "about": {
+    "home": "http://logbook.pocoo.org/", 
+    "license": "BSD", 
+    "summary": "A logging replacement for Python"
+  }, 
+  "app": {}, 
+  "build": {
+    "entry_points": [], 
+    "features": [], 
+    "pin_depends": "", 
+    "script_env": [], 
+    "string": "", 
+    "track_features": []
+  }, 
+  "package": {
+    "name": "logbook", 
+    "version": "0.12.5"
+  }, 
+  "requirements": {
+    "build": [
+      "python", 
+      "setuptools"
+    ], 
+    "conflicts": [], 
+    "run": [
+      "python"
+    ]
+  }, 
+  "source": {
+    "fn": "Logbook-0.12.5.tar.gz", 
+    "git_rev": "", 
+    "md5": "1bf64289b9b4cada5a61817c63dd9e82", 
+    "patches": [], 
+    "path": "", 
+    "svn_rev": "", 
+    "url": "https://pypi.python.org/packages/source/L/Logbook/Logbook-0.12.5.tar.gz"
+  }, 
+  "test": {
+    "commands": [], 
+    "files": [], 
+    "imports": [
+      "logbook"
+    ], 
+    "requires": []
+  }
+}

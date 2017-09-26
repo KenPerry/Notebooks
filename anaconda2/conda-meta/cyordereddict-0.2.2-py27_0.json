@@ -1,0 +1,43 @@
+{
+  "arch": "x86_64",
+  "auth": null,
+  "build": "py27_0",
+  "build_number": 0,
+  "channel": "https://conda.anaconda.org/quantopian/linux-64",
+  "depends": [
+    "python 2.7*"
+  ],
+  "files": [
+    "lib/python2.7/site-packages/cyordereddict-0.2.2-py2.7.egg-info",
+    "lib/python2.7/site-packages/cyordereddict/__init__.py",
+    "lib/python2.7/site-packages/cyordereddict/__init__.pyc",
+    "lib/python2.7/site-packages/cyordereddict/_cyordereddict.so",
+    "lib/python2.7/site-packages/cyordereddict/_version.py",
+    "lib/python2.7/site-packages/cyordereddict/_version.pyc",
+    "lib/python2.7/site-packages/cyordereddict/benchmark/__init__.py",
+    "lib/python2.7/site-packages/cyordereddict/benchmark/__init__.pyc",
+    "lib/python2.7/site-packages/cyordereddict/benchmark/benchmark.py",
+    "lib/python2.7/site-packages/cyordereddict/benchmark/benchmark.pyc",
+    "lib/python2.7/site-packages/cyordereddict/benchmark/magic_timeit.py",
+    "lib/python2.7/site-packages/cyordereddict/benchmark/magic_timeit.pyc"
+  ],
+  "fn": "cyordereddict-0.2.2-py27_0.tar.bz2",
+  "license": "BSD License",
+  "link": {
+    "source": "/home/ubuntu/anaconda2/pkgs/cyordereddict-0.2.2-py27_0",
+    "type": 1
+  },
+  "md5": "74547db9d3be8413cb596f5db3b471d3",
+  "name": "cyordereddict",
+  "noarch": null,
+  "platform": "linux",
+  "preferred_env": null,
+  "priority": 0,
+  "requires": [],
+  "schannel": "quantopian",
+  "size": 125439,
+  "subdir": "linux-64",
+  "url": "https://conda.anaconda.org/quantopian/linux-64/cyordereddict-0.2.2-py27_0.tar.bz2",
+  "version": "0.2.2",
+  "with_features_depends": {}
+}

@@ -1,0 +1,665 @@
+{
+  "paths": [
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader-0.4.0-py2.7.egg-info/PKG-INFO",
+      "path_type": "hardlink",
+      "sha256": "86a3af2c8f35f590776a467208af0149da6de801e5a43fdd4d35ad0b08e784f9",
+      "size_in_bytes": 3487
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader-0.4.0-py2.7.egg-info/SOURCES.txt",
+      "path_type": "hardlink",
+      "sha256": "0525d2681c64caf4fe098b9ead738f290872aebbf74326cc0e4be77d3ed86530",
+      "size_in_bytes": 2467
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader-0.4.0-py2.7.egg-info/dependency_links.txt",
+      "path_type": "hardlink",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_in_bytes": 1
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader-0.4.0-py2.7.egg-info/not-zip-safe",
+      "path_type": "hardlink",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_in_bytes": 1
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader-0.4.0-py2.7.egg-info/requires.txt",
+      "path_type": "hardlink",
+      "sha256": "220d729872e08e384818a3f707a88acbbf4920ba2dc8d8032ad834ae3d8debbf",
+      "size_in_bytes": 58
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader-0.4.0-py2.7.egg-info/top_level.txt",
+      "path_type": "hardlink",
+      "sha256": "f200a9f9fa21528b7c2a3f1f0e5db2f7a46bab302c856ee101c1b522b5ab8de4",
+      "size_in_bytes": 18
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/__init__.py",
+      "path_type": "hardlink",
+      "sha256": "78a8be787ff6140448d8883cb9673f1293068311135c94e72db87d12eaa4c9db",
+      "size_in_bytes": 249
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/__init__.pyc",
+      "path_type": "hardlink",
+      "sha256": "fc7be5b474562a19e6f963611c5bb9f34bb8e73bfde5c7e7017e6aa74b46edf2",
+      "size_in_bytes": 536
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/_testing.py",
+      "path_type": "hardlink",
+      "sha256": "e28308176628a0b0d2e6db9e6cdae54fc7a20ff5e83ffb8aa0d48bf135583e62",
+      "size_in_bytes": 632
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/_testing.pyc",
+      "path_type": "hardlink",
+      "sha256": "9d358c1eff64722e7f0135cd0178ac4977ecbb1cc5ed1591ef767ae7083b9628",
+      "size_in_bytes": 1216
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/_utils.py",
+      "path_type": "hardlink",
+      "sha256": "36414b59f98b673964152b2ede683f4cdbe2ecbbb3f010bbac5496229def78b8",
+      "size_in_bytes": 1081
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/_utils.pyc",
+      "path_type": "hardlink",
+      "sha256": "7ed4184ecb693ebf289c7381d506d4591f28977165e11ff7c848e4858e44d888",
+      "size_in_bytes": 1734
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/base.py",
+      "path_type": "hardlink",
+      "sha256": "f960dad5366974ed1b9c8e4ab588c010dae41aecfbee6df0c669a0bc4a3987ae",
+      "size_in_bytes": 9104
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/base.pyc",
+      "path_type": "hardlink",
+      "sha256": "5e851d5eb5888a8b5c6c52384791a66a5d51cd2b2dcab37e6f590e74f5302259",
+      "size_in_bytes": 10697
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/compat/__init__.py",
+      "path_type": "hardlink",
+      "sha256": "3c49351d051e490976d4ce6261a976390aaf0d97f615d5ee7963c0723a246568",
+      "size_in_bytes": 1215
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/compat/__init__.pyc",
+      "path_type": "hardlink",
+      "sha256": "25d453a3df6fe1c6604aec591171b3fb021369783ce828d3b68ce4215eaf737c",
+      "size_in_bytes": 1275
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/data.py",
+      "path_type": "hardlink",
+      "sha256": "0a3d522b9429d258ea0e601ab4b3f1735e2a6c82fed3dade7fb3737b671f16bb",
+      "size_in_bytes": 7211
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/data.pyc",
+      "path_type": "hardlink",
+      "sha256": "0cc5fd6405d7504ef899c44dd1e14a1b71243dd970802349ed9582c0f434a119",
+      "size_in_bytes": 7160
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/edgar.py",
+      "path_type": "hardlink",
+      "sha256": "ca994b791e46d85edfc87ffc6421e9424a78894a9eef7f1893075c6eadc99fb1",
+      "size_in_bytes": 8255
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/edgar.pyc",
+      "path_type": "hardlink",
+      "sha256": "95fe4c149c401d6f4b2bdab01b6b968c0ffe9dbb69e729ce75de9234c01b803a",
+      "size_in_bytes": 8942
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/enigma.py",
+      "path_type": "hardlink",
+      "sha256": "609bc5c9dca42dbed038a60eec70f7157ddec4ef109b7246fc3b23761dfb30a6",
+      "size_in_bytes": 3534
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/enigma.pyc",
+      "path_type": "hardlink",
+      "sha256": "1053675557261b1303c9607491d878b5c582f6892de58eeb3eb40be3e964f4d9",
+      "size_in_bytes": 4362
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/eurostat.py",
+      "path_type": "hardlink",
+      "sha256": "55cfa5c494f96577a218b4a6e54c93aa261c8e12be35ff71c480405de3574345",
+      "size_in_bytes": 1441
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/eurostat.pyc",
+      "path_type": "hardlink",
+      "sha256": "8584396f260453a9eb6e18873867f53aebcb2f0e8e45882c828bee694506e8c9",
+      "size_in_bytes": 2144
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/famafrench.py",
+      "path_type": "hardlink",
+      "sha256": "b48ee9fa8573359e81d001484b57eaa5e2770d50d796c595b54a30e07f2396e8",
+      "size_in_bytes": 4697
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/famafrench.pyc",
+      "path_type": "hardlink",
+      "sha256": "98d1d83692869c0a1334c8100139db52c6a4788a287b7f5ea40e45a140290764",
+      "size_in_bytes": 5838
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/fred.py",
+      "path_type": "hardlink",
+      "sha256": "d1d077380dea879690c83b637de69c1234d925a0bd771a1e501cb94762500775",
+      "size_in_bytes": 1527
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/fred.pyc",
+      "path_type": "hardlink",
+      "sha256": "5781067a5aebb1e86ef1c07e500fe1493cd9312227e59bdae3bbe5ecfab392a1",
+      "size_in_bytes": 2229
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/google/__init__.py",
+      "path_type": "hardlink",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_in_bytes": 0
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/google/__init__.pyc",
+      "path_type": "hardlink",
+      "sha256": "d67fc552efde17d18515f2b2ed8dac4f0027804b51ce4ebf4cbd3965a07ca84c",
+      "size_in_bytes": 151
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/google/daily.py",
+      "path_type": "hardlink",
+      "sha256": "7f9f8602765596307f5e02db313377cd70a31cf587fe30788c51612f4c1b45b2",
+      "size_in_bytes": 1663
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/google/daily.pyc",
+      "path_type": "hardlink",
+      "sha256": "70307d21de25522893c5532e124928c1687570a5cd33242403291f5ed7f4358c",
+      "size_in_bytes": 2252
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/google/options.py",
+      "path_type": "hardlink",
+      "sha256": "4ab627b9ad171aed9bea7227cdf963fd5e2a786337d751862fcb79eea4b566da",
+      "size_in_bytes": 6370
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/google/options.pyc",
+      "path_type": "hardlink",
+      "sha256": "cb98d28b2dc10b4ab62f9704f46136e5545dc4b9e52730ace57f9edd444bb41b",
+      "size_in_bytes": 6758
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/google/quotes.py",
+      "path_type": "hardlink",
+      "sha256": "1aadc5b98ac0d583626e64197261e927b7d400d2b63f81fa41522ca99c2e264b",
+      "size_in_bytes": 1051
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/google/quotes.pyc",
+      "path_type": "hardlink",
+      "sha256": "e91adfefd2cb6b4c254305038f63a05fbda44f3ba879d320079ec78cb841dc53",
+      "size_in_bytes": 1843
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/io/__init__.py",
+      "path_type": "hardlink",
+      "sha256": "eba2b3326a64e457e869e1f2f8521fa1e79e805721d3ed860141191cea0325bd",
+      "size_in_bytes": 114
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/io/__init__.pyc",
+      "path_type": "hardlink",
+      "sha256": "9b138627d71db87a2df66c210579c9a0bb80210a9df7fbccb8ebc52980cdf2ed",
+      "size_in_bytes": 296
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/io/jsdmx.py",
+      "path_type": "hardlink",
+      "sha256": "c17bf2a304bf34efc7edb74f07738f32700b0b87abee08279b54103fbe17feb9",
+      "size_in_bytes": 2740
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/io/jsdmx.pyc",
+      "path_type": "hardlink",
+      "sha256": "f12a635d575a404658564e458f1f5f60ab3c0e3172fa5e31df87beaa201b84b4",
+      "size_in_bytes": 3343
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/io/sdmx.py",
+      "path_type": "hardlink",
+      "sha256": "85e92d8d46560dc1cdab4e8b175cc60c4ec0c318c9ce93cb1afd65a32fd3e9ec",
+      "size_in_bytes": 7132
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/io/sdmx.pyc",
+      "path_type": "hardlink",
+      "sha256": "f8b63a1cdf5d4f9b8b924b0e8aee3095b6d24968ca05f4289d9aa8b549a65324",
+      "size_in_bytes": 7546
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/io/util.py",
+      "path_type": "hardlink",
+      "sha256": "435c8a078389ec4e65708fd0adfffb8a21bcf83055497d651c977359e4fa83e9",
+      "size_in_bytes": 822
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/io/util.pyc",
+      "path_type": "hardlink",
+      "sha256": "4851702db53ab993f0c6c237671c008be5c9e46517ed8c29cbcf0bc90135d6bd",
+      "size_in_bytes": 1009
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/nasdaq_trader.py",
+      "path_type": "hardlink",
+      "sha256": "f6d871b56fcc949d4054ff9bc5113b583250a4953ebe8a18b0ced451f8dd1fb7",
+      "size_in_bytes": 3437
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/nasdaq_trader.pyc",
+      "path_type": "hardlink",
+      "sha256": "87282d18dc6cb0df6bf893a7248d42c310682eeadae7c628acd72116664742b8",
+      "size_in_bytes": 3435
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/oanda.py",
+      "path_type": "hardlink",
+      "sha256": "80cd20dd83770b68d001e0e86a6e8915b1ccf0eda37437833d59f94f7ad1b040",
+      "size_in_bytes": 1845
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/oanda.pyc",
+      "path_type": "hardlink",
+      "sha256": "194ae355e0e8a2105dc800431ca689c5ad63e593f98465c8d766651f02a63c17",
+      "size_in_bytes": 2213
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/oecd.py",
+      "path_type": "hardlink",
+      "sha256": "261aa3368217585ca3dbf1e5f769c3b52efca5e9818bfdc9a4a72db1e4072d45",
+      "size_in_bytes": 1000
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/oecd.pyc",
+      "path_type": "hardlink",
+      "sha256": "478838347bbd16f0d9bfa68630895aea165dad99d73ab0bde61f618687b8cb2d",
+      "size_in_bytes": 1513
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/__init__.py",
+      "path_type": "hardlink",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_in_bytes": 0
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/__init__.pyc",
+      "path_type": "hardlink",
+      "sha256": "ab0094909a12db9187de5135a7e996c87025f51883ed9fd7ec37cbbb40c11537",
+      "size_in_bytes": 150
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/google/__init__.py",
+      "path_type": "hardlink",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_in_bytes": 0
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/google/__init__.pyc",
+      "path_type": "hardlink",
+      "sha256": "c0f8d2a1c13ecf0f305c14bbb5a7725445edc33e7e793a485e00e561fa637f2b",
+      "size_in_bytes": 157
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/google/test_google.py",
+      "path_type": "hardlink",
+      "sha256": "c3fb7426358be1ef3ca0f27f03ef6ba7f53c68fe0db6f25ea64750c2b618d9cd",
+      "size_in_bytes": 5915
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/google/test_google.pyc",
+      "path_type": "hardlink",
+      "sha256": "1d9efbfb3318fd57285cba69b757e5541e5fd1d4df6056a1894d74d46be1df13",
+      "size_in_bytes": 8465
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/google/test_options.py",
+      "path_type": "hardlink",
+      "sha256": "e5ff43b5da36b3f582341f51478c70f6a2da221724311d83485041946988ab30",
+      "size_in_bytes": 2526
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/google/test_options.pyc",
+      "path_type": "hardlink",
+      "sha256": "c3b51fd4869ce9b62772f4537fad49f11ba3098644ea520928c483f711c58633",
+      "size_in_bytes": 4715
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/io/__init__.py",
+      "path_type": "hardlink",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_in_bytes": 0
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/io/__init__.pyc",
+      "path_type": "hardlink",
+      "sha256": "877a214aa6b09500c8c452d96235e4f2a16b962918bd13f16bd525c7c76c875e",
+      "size_in_bytes": 153
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/io/test_jsdmx.py",
+      "path_type": "hardlink",
+      "sha256": "a3b796615fea7f38e71531c106fdf8876a3b7b57620a65b5917dd7b00002dffb",
+      "size_in_bytes": 3381
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/io/test_jsdmx.pyc",
+      "path_type": "hardlink",
+      "sha256": "f6877e86fbbf70978d49f46bcfe2cf4710cc9cc489482d3c51cebf9216587125",
+      "size_in_bytes": 3864
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/io/test_sdmx.py",
+      "path_type": "hardlink",
+      "sha256": "34f0197b480badb9acfd2d72ad4436dc7b38123563be8e546709ee8c1ed4ffe3",
+      "size_in_bytes": 1439
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/io/test_sdmx.pyc",
+      "path_type": "hardlink",
+      "sha256": "0ef0a3fc883770c817f9cb689b4ff4580280f69843af9bd7bc099e36f99bffa6",
+      "size_in_bytes": 2000
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_base.py",
+      "path_type": "hardlink",
+      "sha256": "3567a400b37f26ce8339a7a108b972a917ac45d88bc5f2c5c0df7f8224e66afb",
+      "size_in_bytes": 824
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_base.pyc",
+      "path_type": "hardlink",
+      "sha256": "b64dfddd7cabba34efd9222336c98c1ebf2925298d16e400d108b6fd75303d35",
+      "size_in_bytes": 1915
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_data.py",
+      "path_type": "hardlink",
+      "sha256": "e95f116dfec7bcfc8d74d640797cb99a430354f01a62d0f56743bbf3a90d86dd",
+      "size_in_bytes": 943
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_data.pyc",
+      "path_type": "hardlink",
+      "sha256": "fed9b8894f76067a3b5af09f83860233b3e797985e4b962db2c2fbff11f1b42c",
+      "size_in_bytes": 2444
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_edgar.py",
+      "path_type": "hardlink",
+      "sha256": "164f6f1bda93927e293673c72888ae1cd05e8574b5ffc8fc23b401c833034229",
+      "size_in_bytes": 2215
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_edgar.pyc",
+      "path_type": "hardlink",
+      "sha256": "9f9359e67fd1f98f4dc20d3015ade2293505fb75763c54a6bedaef339f5fdd01",
+      "size_in_bytes": 3084
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_enigma.py",
+      "path_type": "hardlink",
+      "sha256": "d3dfc395634094c8535d458c49aa7c09fd79124803d2b0cba0bab35cacf37ef7",
+      "size_in_bytes": 1202
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_enigma.pyc",
+      "path_type": "hardlink",
+      "sha256": "eb03383b29c90a7f9e7e6e48d1f6ad293c810306d788e44d5b51c8f84099308a",
+      "size_in_bytes": 2326
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_eurostat.py",
+      "path_type": "hardlink",
+      "sha256": "668e170e7126540313c7b9ce504538d9625c89f78142c987f13bfddb7bac058d",
+      "size_in_bytes": 4406
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_eurostat.pyc",
+      "path_type": "hardlink",
+      "sha256": "10f9e2001977a1f42d440c4dba709a634a730883cc36a65743c6a25bf5e49a79",
+      "size_in_bytes": 5188
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_famafrench.py",
+      "path_type": "hardlink",
+      "sha256": "2beee8b4bbed47717e71cd53771a1cea10622774bc43e4124ae174535fccad7c",
+      "size_in_bytes": 3942
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_famafrench.pyc",
+      "path_type": "hardlink",
+      "sha256": "dcdecf660f1d7e0fbc8d7e3bfe3f7fb7fd9fc1fa6b6c1a059f0c304b817210cd",
+      "size_in_bytes": 5290
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_fred.py",
+      "path_type": "hardlink",
+      "sha256": "faa8f7f8d9a80d937a758c1b6bbbd5f52c34f0e08fd86dcf1cb904bb6a7f3041",
+      "size_in_bytes": 2829
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_fred.pyc",
+      "path_type": "hardlink",
+      "sha256": "7ff311665c708705a62ee6e3c94f01e437faf8abf5a2e78e8045fe9584afb5b6",
+      "size_in_bytes": 4288
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_nasdaq.py",
+      "path_type": "hardlink",
+      "sha256": "12c4cc815a12b3bc5b9f13e54397378cd3cf9f7521f0691db5127b84fe9542f1",
+      "size_in_bytes": 348
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_nasdaq.pyc",
+      "path_type": "hardlink",
+      "sha256": "e43e37823d93b8619bbf71c18a7c4990d4c98fb05ea0a3d5a941d61330f5172a",
+      "size_in_bytes": 933
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_oanda.py",
+      "path_type": "hardlink",
+      "sha256": "b2765470ede46974f220f2bce9f0e60aacbb479d3b157e788e3fc1418d33b369",
+      "size_in_bytes": 1262
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_oanda.pyc",
+      "path_type": "hardlink",
+      "sha256": "905480cbf43f35c15015827b75c476c1e869412a2784e39a83e44f7c7a44393c",
+      "size_in_bytes": 1942
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_oecd.py",
+      "path_type": "hardlink",
+      "sha256": "8e9c0e394d3b47961c5d37821bc21438ec6392a07fbc25c3bf99013d8f242ce2",
+      "size_in_bytes": 4451
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_oecd.pyc",
+      "path_type": "hardlink",
+      "sha256": "7a2f4acebb5d9b6c96e192955124964ade5481c42022874a50b4c1a8e14480b2",
+      "size_in_bytes": 4524
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_tsp.py",
+      "path_type": "hardlink",
+      "sha256": "9a840d9879e881111c0d6a2a4558a408dce49f7a1fb352067407f179a6625f5d",
+      "size_in_bytes": 620
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_tsp.pyc",
+      "path_type": "hardlink",
+      "sha256": "ea889472c510b81cf877116b2a5956a3fd45dcfd6b7c0e2a2589a319bd0a24d9",
+      "size_in_bytes": 1492
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_wb.py",
+      "path_type": "hardlink",
+      "sha256": "688e1e37277979ce2144c99f1dabadf290404a6994730dcb0b6219e0a5533fbc",
+      "size_in_bytes": 8620
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/test_wb.pyc",
+      "path_type": "hardlink",
+      "sha256": "986b9830711e0c857bbe534e90c6c84a9ec715e807e647747b6e96d527b0e0dc",
+      "size_in_bytes": 6513
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/yahoo/__init__.py",
+      "path_type": "hardlink",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_in_bytes": 0
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/yahoo/__init__.pyc",
+      "path_type": "hardlink",
+      "sha256": "83aba668cf9106471deb179ca54ecb8f1c481c5d84cf7cc93b4c6a4cd37c7173",
+      "size_in_bytes": 156
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/yahoo/test_options.py",
+      "path_type": "hardlink",
+      "sha256": "75187ac0782e7c205e6dd9c593ae4de7102ac9654bc0f814ab1f6b6d59db568a",
+      "size_in_bytes": 6150
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/yahoo/test_options.pyc",
+      "path_type": "hardlink",
+      "sha256": "b4c0dfc82a6c357b66424dab8c83b77f0c6ef544fab3e4bfcd08b147daf31b3f",
+      "size_in_bytes": 8244
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/yahoo/test_yahoo.py",
+      "path_type": "hardlink",
+      "sha256": "cde72568a637c785f1dabda83964f418e15589a7cd524239fc7e70653aed04bc",
+      "size_in_bytes": 8286
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tests/yahoo/test_yahoo.pyc",
+      "path_type": "hardlink",
+      "sha256": "d5eea48d9f6a2c1bc92653a8a82ef093e64329d4c58bdd117bfddf47708ed9a5",
+      "size_in_bytes": 10416
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tsp.py",
+      "path_type": "hardlink",
+      "sha256": "b61743311c89f416b02ee2c772c587f44698ff28919b2f2da66fd94f7e424fe0",
+      "size_in_bytes": 2372
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/tsp.pyc",
+      "path_type": "hardlink",
+      "sha256": "63ea241c43d88f2ac2a08caf2f9dc8c548e61570625e16cb19f0a8c1c3080022",
+      "size_in_bytes": 3258
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/wb.py",
+      "path_type": "hardlink",
+      "sha256": "67181707e8063b38b5446999bdf3fdacc98810516b1231b507216b91fb06a445",
+      "size_in_bytes": 16470
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/wb.pyc",
+      "path_type": "hardlink",
+      "sha256": "80bdb71abae6f5c003a266051f7eb605324c45d070163c38431fd848d0cf8c86",
+      "size_in_bytes": 18035
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/yahoo/__init__.py",
+      "path_type": "hardlink",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_in_bytes": 0
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/yahoo/__init__.pyc",
+      "path_type": "hardlink",
+      "sha256": "f08bc3c5561202f1f5703fcb35a2fccf7f06c10d155de65be6b2db47878cfa48",
+      "size_in_bytes": 150
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/yahoo/actions.py",
+      "path_type": "hardlink",
+      "sha256": "76960bb19589504586b4050483bd2ab99f53e9d613fd5e125959ce087ff5f5c3",
+      "size_in_bytes": 2037
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/yahoo/actions.pyc",
+      "path_type": "hardlink",
+      "sha256": "9b1acfc4f3a7db426b0121f0260b717a9a1318319c4366d0e4136c2be9d8af7e",
+      "size_in_bytes": 2250
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/yahoo/components.py",
+      "path_type": "hardlink",
+      "sha256": "90e20fabaf2b64637812526c1ec65e0dd37f4c97b3abe6edbd2d1a0dcea7a003",
+      "size_in_bytes": 1682
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/yahoo/components.pyc",
+      "path_type": "hardlink",
+      "sha256": "899a0fb4d14f87cf442ca4da16a3733b50263435e3261bf31f56a9acbb595ae8",
+      "size_in_bytes": 1809
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/yahoo/daily.py",
+      "path_type": "hardlink",
+      "sha256": "a771a329de48fffac5831c31954f0c3853148608f7499ebe8256faf60dc58c61",
+      "size_in_bytes": 4533
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/yahoo/daily.pyc",
+      "path_type": "hardlink",
+      "sha256": "b7620028cf4ae217d106e233f6922c5ca0f8e1dbd1039d1581c37fd395dc4a60",
+      "size_in_bytes": 5098
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/yahoo/options.py",
+      "path_type": "hardlink",
+      "sha256": "47d49583b165c7db440f0a0c77520f78bd8e1966df7777d94f15a800e74b911b",
+      "size_in_bytes": 31336
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/yahoo/options.pyc",
+      "path_type": "hardlink",
+      "sha256": "17390c8a3029c19af58b1375c78688aa6ef3d19b8932476692def7ba11ebd808",
+      "size_in_bytes": 30266
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/yahoo/quotes.py",
+      "path_type": "hardlink",
+      "sha256": "2d96ce5df031b3901264e4a92b4c09a67fcd59f27646ac66ce8fffd11f64605d",
+      "size_in_bytes": 1540
+    },
+    {
+      "_path": "lib/python2.7/site-packages/pandas_datareader/yahoo/quotes.pyc",
+      "path_type": "hardlink",
+      "sha256": "f0efbce61414b20a8fd9a1e95f7e912e5e4c452210070e6b12e3b41f341a13d9",
+      "size_in_bytes": 2158
+    }
+  ],
+  "paths_version": 1
+}

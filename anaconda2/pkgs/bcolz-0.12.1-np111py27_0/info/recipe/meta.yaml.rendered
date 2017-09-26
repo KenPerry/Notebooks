@@ -1,0 +1,33 @@
+# This file created by conda-build 1.21.11+0.g5b44ab3.dirty
+# meta.yaml template originally from:
+# /home/travis/build/quantopian/zipline/conda/bcolz, last modified Wed Sep 21 02:04:30 2016
+# ------------------------------------------------
+
+package:
+    name: bcolz
+    version: 0.12.1
+source:
+    fn: bcolz-0.12.1.tar.gz
+    md5: 43deb659e1f926976be3850e01844360
+    url: https://pypi.python.org/packages/source/b/bcolz/bcolz-0.12.1.tar.gz
+build: {}
+requirements:
+    build:
+        - python
+        - setuptools >18.0
+        - numpy x.x
+        - setuptools_scm >1.5.4
+        - cython ==0.22.1
+    run:
+        - python
+        - numpy x.x
+test:
+    imports:
+        - bcolz
+        - bcolz.tests
+    requires:
+        - mock
+about:
+    home: https://github.com/Blosc/bcolz
+    license: BSD License
+    summary: columnar and compressed data containers.

@@ -1,0 +1,14 @@
+prefix=/home/ubuntu/anaconda2
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include/qt
+
+
+Name: Qt5 WebKit
+Description: Qt WebKit module
+Version: 5.6.2
+Libs: -lQt5WebKit 
+Libs.private:  -lQt5Gui  -lQt5Core -L/home/ubuntu/anaconda2/lib -lpthread -lQt5Network  -lQt5Core -L/home/ubuntu/anaconda2/lib -lpthread -lQt5Core -lpthread -L/home/ubuntu/anaconda2/lib -lpthread -L/home/ubuntu/anaconda2/lib -Wl,-whole-archive -lWebKit1 -Wl,-no-whole-archive -L/root/mc-x64-2.7/conda-bld/qt_1484651277111/work/qt-everywhere-opensource-src-5.6.2/qtwebkit/Source/WebKit/ -Wl,-whole-archive -lWebKit2 -Wl,-no-whole-archive -L/root/mc-x64-2.7/conda-bld/qt_1484651277111/work/qt-everywhere-opensource-src-5.6.2/qtwebkit/Source/WebKit2/ -lrt -Wl,-whole-archive -lWebCore -Wl,-no-whole-archive -L/root/mc-x64-2.7/conda-bld/qt_1484651277111/work/qt-everywhere-opensource-src-5.6.2/qtwebkit/Source/WebCore/ -lz -ljpeg -lpng -Wl,-whole-archive -lANGLE -Wl,-no-whole-archive -L/root/mc-x64-2.7/conda-bld/qt_1484651277111/work/qt-everywhere-opensource-src-5.6.2/qtwebkit/Source/ThirdParty/ANGLE/ -Wl,-whole-archive -lleveldb -Wl,-no-whole-archive -L/root/mc-x64-2.7/conda-bld/qt_1484651277111/work/qt-everywhere-opensource-src-5.6.2/qtwebkit/Source/ThirdParty/leveldb/ -Wl,-whole-archive -lJavaScriptCore -Wl,-no-whole-archive -L/root/mc-x64-2.7/conda-bld/qt_1484651277111/work/qt-everywhere-opensource-src-5.6.2/qtwebkit/Source/JavaScriptCore/ -Wl,-whole-archive -lWTF -Wl,-no-whole-archive -L/root/mc-x64-2.7/conda-bld/qt_1484651277111/work/qt-everywhere-opensource-src-5.6.2/qtwebkit/Source/WTF/ -lpthread -lxml2 -lglib-2.0 -lgio-2.0 -lgobject-2.0 -lglib-2.0 -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0 -lgstapp-1.0 -lgstbase-1.0 -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0 -lgstbase-1.0 -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0 -lgstpbutils-1.0 -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0 -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0 -lgstvideo-1.0 -lgstbase-1.0 -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0 -lgstaudio-1.0 -lgstbase-1.0 -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0 -lsqlite3 -licui18n -licuuc -licudata  -lQt5Quick  -lQt5Gui -L/home/ubuntu/anaconda2/lib  -lQt5Qml -lQt5Network -lQt5Core -lpthread  -lQt5WebChannel  -lQt5Qml  -L/home/ubuntu/anaconda2/lib -lQt5Network -lQt5Core -lpthread -lQt5Qml  -lQt5Network -L/home/ubuntu/anaconda2/lib -lQt5Core -lpthread -lQt5Network  -lQt5Core -L/home/ubuntu/anaconda2/lib -lpthread -lQt5Gui  -lQt5Core -L/home/ubuntu/anaconda2/lib -lpthread -lQt5Sql  -lQt5Core -L/home/ubuntu/anaconda2/lib -lpthread -lQt5Core -lpthread -L/home/ubuntu/anaconda2/lib -lGL  
+Cflags: -I${includedir}/QtWebKit -I${includedir}
+Requires: Qt5Core Qt5Gui Qt5Network
+

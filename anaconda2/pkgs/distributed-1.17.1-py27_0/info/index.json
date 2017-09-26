@@ -1,0 +1,25 @@
+{
+  "arch": "x86_64", 
+  "build": "py27_0", 
+  "build_number": 0, 
+  "depends": [
+    "bokeh >=0.12.3", 
+    "click >=6.6", 
+    "cloudpickle >=0.2.2", 
+    "msgpack-python", 
+    "psutil", 
+    "python 2.7*", 
+    "six", 
+    "sortedcontainers", 
+    "tblib", 
+    "toolz >=0.7.4", 
+    "tornado >=4.2", 
+    "zict >=0.1.2"
+  ], 
+  "license": "BSD 3-Clause", 
+  "license_family": "BSD", 
+  "name": "distributed", 
+  "platform": "linux", 
+  "subdir": "linux-64", 
+  "version": "1.17.1"
+}

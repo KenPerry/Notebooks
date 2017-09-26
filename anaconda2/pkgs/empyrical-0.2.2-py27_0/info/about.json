@@ -1,0 +1,5 @@
+{
+  "home": "https://github.com/quantopian/empyrical", 
+  "license": "Apache Software License", 
+  "summary": "empyrical is a Python library with performance and risk statistics\\ncommonly used in quantitative finance"
+}

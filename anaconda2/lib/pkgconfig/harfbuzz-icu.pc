@@ -1,0 +1,13 @@
+prefix=/home/ubuntu/anaconda2
+exec_prefix=/home/ubuntu/anaconda2
+libdir=/home/ubuntu/anaconda2/lib
+includedir=/home/ubuntu/anaconda2/include
+
+Name: harfbuzz
+Description: HarfBuzz text shaping library ICU integration
+Version: 0.9.39
+
+Requires: harfbuzz
+Requires.private: icu-uc
+Libs: -L${libdir} -lharfbuzz-icu
+Cflags: -I${includedir}/harfbuzz

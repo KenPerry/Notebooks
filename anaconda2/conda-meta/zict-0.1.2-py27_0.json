@@ -1,0 +1,48 @@
+{
+  "arch": "x86_64", 
+  "build": "py27_0", 
+  "build_number": 0, 
+  "depends": [
+    "heapdict", 
+    "python 2.7*"
+  ], 
+  "files": [
+    "lib/python2.7/site-packages/zict-0.1.2-py2.7.egg-info/PKG-INFO", 
+    "lib/python2.7/site-packages/zict-0.1.2-py2.7.egg-info/SOURCES.txt", 
+    "lib/python2.7/site-packages/zict-0.1.2-py2.7.egg-info/dependency_links.txt", 
+    "lib/python2.7/site-packages/zict-0.1.2-py2.7.egg-info/not-zip-safe", 
+    "lib/python2.7/site-packages/zict-0.1.2-py2.7.egg-info/requires.txt", 
+    "lib/python2.7/site-packages/zict-0.1.2-py2.7.egg-info/top_level.txt", 
+    "lib/python2.7/site-packages/zict/__init__.py", 
+    "lib/python2.7/site-packages/zict/__init__.pyc", 
+    "lib/python2.7/site-packages/zict/buffer.py", 
+    "lib/python2.7/site-packages/zict/buffer.pyc", 
+    "lib/python2.7/site-packages/zict/common.py", 
+    "lib/python2.7/site-packages/zict/common.pyc", 
+    "lib/python2.7/site-packages/zict/file.py", 
+    "lib/python2.7/site-packages/zict/file.pyc", 
+    "lib/python2.7/site-packages/zict/func.py", 
+    "lib/python2.7/site-packages/zict/func.pyc", 
+    "lib/python2.7/site-packages/zict/lmdb.py", 
+    "lib/python2.7/site-packages/zict/lmdb.pyc", 
+    "lib/python2.7/site-packages/zict/lru.py", 
+    "lib/python2.7/site-packages/zict/lru.pyc", 
+    "lib/python2.7/site-packages/zict/sieve.py", 
+    "lib/python2.7/site-packages/zict/sieve.pyc", 
+    "lib/python2.7/site-packages/zict/zip.py", 
+    "lib/python2.7/site-packages/zict/zip.pyc"
+  ], 
+  "installed_by": "Anaconda2-4.4.0-Linux-x86_64", 
+  "license": "BSD", 
+  "license_family": "BSD", 
+  "link": {
+    "source": "/home/ubuntu/anaconda2/pkgs/zict-0.1.2-py27_0", 
+    "type": "hard-link"
+  }, 
+  "md5": "fda26e19bb53a0b041d32ae6f0051040", 
+  "name": "zict", 
+  "platform": "linux", 
+  "subdir": "linux-64", 
+  "url": "https://repo.continuum.io/pkgs/free/linux-64/zict-0.1.2-py27_0.tar.bz2", 
+  "version": "0.1.2"
+}

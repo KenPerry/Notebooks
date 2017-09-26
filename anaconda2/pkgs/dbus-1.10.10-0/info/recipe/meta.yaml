@@ -1,0 +1,29 @@
+# This file created by conda-build 2.0.1
+# meta.yaml template originally from:
+# /media/sf_conda/anaconda/packages/dbus, last modified Tue Sep 13 13:48:38 2016
+# ------------------------------------------------
+
+package:
+    name: dbus
+    version: 1.10.10
+source:
+    md5: 495676d240eb982921b3ad1343526849
+    url: http://dbus.freedesktop.org/releases/dbus/dbus-1.10.10.tar.gz
+build:
+    detect_binary_files_with_prefix: 'true'
+    number: '0'
+requirements:
+    build:
+        - expat
+        - python
+    run:
+        - expat
+test:
+    commands:
+        - dbus-daemon --version
+        - dbus-uuidgen
+about:
+    home: http://www.freedesktop.org/wiki/Software/dbus/
+    license: GPL2
+    summary: 'D-Bus is a message bus system, a simple way for applications to talk
+        to one another. '

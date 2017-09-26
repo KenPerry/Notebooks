@@ -1,0 +1,8 @@
+{
+  "description": "ZeroMQ s a high-performance asynchronous messaging library, aimed at use\nin distributed or concurrent applications.\n", 
+  "dev_url": "https://github.com/zeromq", 
+  "doc_url": "http://zeromq.org/intro:read-the-manual", 
+  "home": "http://zeromq.org", 
+  "license": "LGPL", 
+  "summary": "Distributed messaging"
+}

@@ -1,0 +1,38 @@
+# This file created by conda-build 1.21.11+0.g5b44ab3.dirty
+# meta.yaml template originally from:
+# /home/travis/build/quantopian/zipline/conda/empyrical, last modified Sat Feb  4 21:15:42 2017
+# ------------------------------------------------
+
+package:
+    name: empyrical
+    version: 0.2.2
+source:
+    fn: empyrical-0.2.2.tar.gz
+    md5: d614402c585ccad847b35e6c73f85a67
+    url: https://pypi.python.org/packages/61/0a/959a48f176da49ddd939d49ad53bc6e5e4c82c022f1f724517cb7a82770c/empyrical-0.2.2.tar.gz
+build: {}
+requirements:
+    build:
+        - python
+        - setuptools
+        - numpy >=1.9.2
+        - pandas >=0.16.1
+        - scipy >=0.15.1
+        - bottleneck >=1.0.0
+    run:
+        - python
+        - numpy >=1.9.2
+        - pandas >=0.16.1
+        - scipy >=0.15.1
+        - bottleneck >=1.0.0
+test:
+    imports:
+        - empyrical
+        - empyrical.tests
+    requires:
+        - nose >=1.3.7
+about:
+    home: https://github.com/quantopian/empyrical
+    license: Apache Software License
+    summary: empyrical is a Python library with performance and risk statistics\ncommonly
+        used in quantitative finance

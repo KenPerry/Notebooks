@@ -1,0 +1,14 @@
+prefix=/home/ubuntu/anaconda2
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include/qt
+
+
+Name: Qt5 Quick
+Description: Qt Quick module
+Version: 5.6.2
+Libs: -lQt5Quick 
+Libs.private:  -lQt5Gui -L/home/ubuntu/anaconda2/lib  -lQt5Qml -lQt5Network -lQt5Core -lpthread -lQt5Network  -L/home/ubuntu/anaconda2/lib -lQt5Core -lpthread -lGL  
+Cflags: -I${includedir}/QtQuick -I${includedir}
+Requires: Qt5Core Qt5Gui Qt5Qml
+

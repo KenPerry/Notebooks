@@ -1,0 +1,11 @@
+{
+  "arch": "x86_64", 
+  "build": "0", 
+  "build_number": 0, 
+  "depends": [], 
+  "license": "GPL3", 
+  "name": "libtool", 
+  "platform": "linux", 
+  "subdir": "linux-64", 
+  "version": "2.4.2"
+}

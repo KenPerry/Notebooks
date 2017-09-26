@@ -1,0 +1,41 @@
+# This file created by conda-build 1.21.11+0.g5b44ab3.dirty
+# meta.yaml template originally from:
+# /home/travis/build/quantopian/zipline/conda/alembic, last modified Wed Aug 24 20:50:27 2016
+# ------------------------------------------------
+
+package:
+    name: alembic
+    version: 0.7.7
+source:
+    fn: alembic-0.7.7.tar.gz
+    md5: 8bd77f40857100da2cdcb6f5da9a7f1c
+    url: https://pypi.python.org/packages/41/80/58c25d9a4e8321376a0231ef4cedd22f93c899c28c93bc236ca991a0f291/alembic-0.7.7.tar.gz
+build:
+    entry_points:
+        - alembic = alembic.config:main
+requirements:
+    build:
+        - python
+        - setuptools
+        - sqlalchemy >=0.7.6
+        - mako
+    run:
+        - python
+        - sqlalchemy >=0.7.6
+        - mako
+test:
+    commands:
+        - alembic --help
+    imports:
+        - alembic
+        - alembic.autogenerate
+        - alembic.ddl
+        - alembic.testing
+        - alembic.testing.plugin
+    requires:
+        - mock
+        - nose >=0.11
+about:
+    home: http://bitbucket.org/zzzeek/alembic
+    license: MIT
+    summary: A database migration tool for SQLAlchemy.

@@ -1,0 +1,26 @@
+{
+  "arch": "x86_64", 
+  "build": "py27_1", 
+  "build_number": 1, 
+  "depends": [
+    "configparser", 
+    "python 2.7*"
+  ], 
+  "files": [
+    "lib/python2.7/site-packages/entrypoints-0.2.2-py2.7.egg-info", 
+    "lib/python2.7/site-packages/entrypoints.py", 
+    "lib/python2.7/site-packages/entrypoints.pyc"
+  ], 
+  "installed_by": "Anaconda2-4.4.0-Linux-x86_64", 
+  "license": "MIT", 
+  "link": {
+    "source": "/home/ubuntu/anaconda2/pkgs/entrypoints-0.2.2-py27_1", 
+    "type": "hard-link"
+  }, 
+  "md5": "ce1a2914678768b1b56baf5dab799f28", 
+  "name": "entrypoints", 
+  "platform": "linux", 
+  "subdir": "linux-64", 
+  "url": "https://repo.continuum.io/pkgs/free/linux-64/entrypoints-0.2.2-py27_1.tar.bz2", 
+  "version": "0.2.2"
+}

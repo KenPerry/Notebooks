@@ -1,0 +1,45 @@
+{
+  "arch": "x86_64",
+  "auth": null,
+  "build": "py27_0",
+  "build_number": 0,
+  "channel": "https://repo.continuum.io/pkgs/free/linux-64",
+  "date": "2015-07-13",
+  "depends": [
+    "heapdict 1.0.0",
+    "python 2.7*"
+  ],
+  "files": [
+    "lib/python2.7/site-packages/chest-0.2.3-py2.7.egg-info",
+    "lib/python2.7/site-packages/chest/__init__.py",
+    "lib/python2.7/site-packages/chest/__init__.pyc",
+    "lib/python2.7/site-packages/chest/_version.py",
+    "lib/python2.7/site-packages/chest/_version.pyc",
+    "lib/python2.7/site-packages/chest/core.py",
+    "lib/python2.7/site-packages/chest/core.pyc",
+    "lib/python2.7/site-packages/chest/utils.py",
+    "lib/python2.7/site-packages/chest/utils.pyc"
+  ],
+  "fn": "chest-0.2.3-py27_0.tar.bz2",
+  "license": "BSD",
+  "link": {
+    "source": "/home/ubuntu/anaconda2/pkgs/chest-0.2.3-py27_0",
+    "type": 1
+  },
+  "md5": "afe6d994273886e5f39d2babef0a2b2c",
+  "name": "chest",
+  "noarch": null,
+  "platform": "linux",
+  "preferred_env": null,
+  "priority": 1,
+  "requires": [
+    "heapdict 1.0.0",
+    "python 2.7"
+  ],
+  "schannel": "defaults",
+  "size": 9524,
+  "subdir": "linux-64",
+  "url": "https://repo.continuum.io/pkgs/free/linux-64/chest-0.2.3-py27_0.tar.bz2",
+  "version": "0.2.3",
+  "with_features_depends": {}
+}

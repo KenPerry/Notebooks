@@ -1,0 +1,35 @@
+{
+  "paths": [
+    {
+      "_path": "lib/python2.7/site-packages/requests_ftp-0.3.1-py2.7.egg-info",
+      "path_type": "hardlink",
+      "sha256": "d3ce00b427ee24fdbf748fce14898e38e3c3ee808288ed4cb813a899d6a9eb0e",
+      "size_in_bytes": 4265
+    },
+    {
+      "_path": "lib/python2.7/site-packages/requests_ftp/__init__.py",
+      "path_type": "hardlink",
+      "sha256": "46f007a3fd824942cd4a6b6b8efb8b9507d893622b72daf7e4bb7870f4ac3fdb",
+      "size_in_bytes": 556
+    },
+    {
+      "_path": "lib/python2.7/site-packages/requests_ftp/__init__.pyc",
+      "path_type": "hardlink",
+      "sha256": "eec0e8f45c8bd61987f79651f4128c969b8850ea32011e3f47d33515f4493e19",
+      "size_in_bytes": 811
+    },
+    {
+      "_path": "lib/python2.7/site-packages/requests_ftp/ftp.py",
+      "path_type": "hardlink",
+      "sha256": "b5a2be168e30d67a33529f1589c3b43e2ff30b5547610fa5fc1140b7a9460c75",
+      "size_in_bytes": 14468
+    },
+    {
+      "_path": "lib/python2.7/site-packages/requests_ftp/ftp.pyc",
+      "path_type": "hardlink",
+      "sha256": "72aa8285cf025ffb19bfb126da9e174c9d17c5f33a880ad31a09d14d28371cf4",
+      "size_in_bytes": 12277
+    }
+  ],
+  "paths_version": 1
+}

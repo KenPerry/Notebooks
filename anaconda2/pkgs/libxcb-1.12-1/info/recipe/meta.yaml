@@ -1,0 +1,24 @@
+# This file created by conda-build 2.0.6+1.g87b2a2a.dirty
+# meta.yaml template originally from:
+# /home/ray/conda/anaconda/packages/libxcb, last modified Mon Oct 17 21:19:46 2016
+# ------------------------------------------------
+
+package:
+    name: libxcb
+    version: '1.12'
+source:
+    fn: libxcb-1.12.tar.bz2
+    md5: 28e552bd78bc1050b6b26ca1db0e5bb6
+    url: http://xcb.freedesktop.org/dist/libxcb-1.12.tar.bz2
+build:
+    number: '1'
+requirements:
+    build:
+        - python 2.7.*
+        - pthread-stubs
+        - xcb-proto
+about:
+    home: http://xcb.freedesktop.org/
+    license: MIT
+    license_file: COPYING
+    summary: This is the C-language Bindings package to the X Window System protocol

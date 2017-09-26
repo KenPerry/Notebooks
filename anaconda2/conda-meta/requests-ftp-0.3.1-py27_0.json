@@ -1,0 +1,38 @@
+{
+  "arch": "x86_64",
+  "auth": null,
+  "build": "py27_0",
+  "build_number": 0,
+  "channel": "https://repo.continuum.io/pkgs/free/linux-64",
+  "date": "2017-06-01",
+  "depends": [
+    "python 2.7*",
+    "requests"
+  ],
+  "files": [
+    "lib/python2.7/site-packages/requests_ftp-0.3.1-py2.7.egg-info",
+    "lib/python2.7/site-packages/requests_ftp/__init__.py",
+    "lib/python2.7/site-packages/requests_ftp/__init__.pyc",
+    "lib/python2.7/site-packages/requests_ftp/ftp.py",
+    "lib/python2.7/site-packages/requests_ftp/ftp.pyc"
+  ],
+  "fn": "requests-ftp-0.3.1-py27_0.tar.bz2",
+  "license": "Apache Software License",
+  "license_family": "Apache",
+  "link": {
+    "source": "/home/ubuntu/anaconda2/pkgs/requests-ftp-0.3.1-py27_0",
+    "type": 1
+  },
+  "md5": "40a36379af46bc7be9224b39e74bf0fd",
+  "name": "requests-ftp",
+  "noarch": null,
+  "platform": "linux",
+  "preferred_env": null,
+  "priority": 1,
+  "schannel": "defaults",
+  "size": 12479,
+  "subdir": "linux-64",
+  "url": "https://repo.continuum.io/pkgs/free/linux-64/requests-ftp-0.3.1-py27_0.tar.bz2",
+  "version": "0.3.1",
+  "with_features_depends": {}
+}

@@ -1,0 +1,30 @@
+# This file created by conda-build 2.0.10+8.gccef906
+# meta.yaml template originally from:
+# /home/ilan/anaconda/packages/requests-file, last modified Fri Dec  2 12:05:01 2016
+# ------------------------------------------------
+
+package:
+    name: requests-file
+    version: 1.4.1
+source:
+    fn: requests-file-1.4.1.tar.gz
+    md5: 8888bd39909cecb74d0fb9391195ffda
+    url: https://pypi.python.org/packages/d4/6a/3503eaf7b8c8b85fc07485234d914fd264b5e81bbb0c6bdf591ccb09972b/requests-file-1.4.1.tar.gz
+build: {}
+requirements:
+    build:
+        - python
+        - requests
+        - six
+    run:
+        - python
+        - requests
+        - six
+test:
+    imports:
+        - requests_file
+about:
+    home: http://github.com/dashea/requests-file
+    license: Apache
+    license_file: LICENSE
+    summary: file transport adapter for Requests

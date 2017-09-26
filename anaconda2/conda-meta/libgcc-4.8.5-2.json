@@ -1,0 +1,31 @@
+{
+  "arch": "x86_64", 
+  "build": "2", 
+  "build_number": 2, 
+  "depends": [], 
+  "files": [
+    "lib/libgcc_s.so", 
+    "lib/libgcc_s.so.1", 
+    "lib/libgomp.so", 
+    "lib/libgomp.so.1", 
+    "lib/libgomp.so.1.0.0", 
+    "lib/libquadmath.so", 
+    "lib/libquadmath.so.0", 
+    "lib/libquadmath.so.0.0.0", 
+    "lib/libstdc++.so", 
+    "lib/libstdc++.so.6", 
+    "lib/libstdc++.so.6.0.19"
+  ], 
+  "installed_by": "Anaconda2-4.4.0-Linux-x86_64", 
+  "license": "GPL", 
+  "link": {
+    "source": "/home/ubuntu/anaconda2/pkgs/libgcc-4.8.5-2", 
+    "type": "hard-link"
+  }, 
+  "md5": "fb7f042b7146a04e13597d7a20fe70b1", 
+  "name": "libgcc", 
+  "platform": "linux", 
+  "subdir": "linux-64", 
+  "url": "https://repo.continuum.io/pkgs/free/linux-64/libgcc-4.8.5-2.tar.bz2", 
+  "version": "4.8.5"
+}

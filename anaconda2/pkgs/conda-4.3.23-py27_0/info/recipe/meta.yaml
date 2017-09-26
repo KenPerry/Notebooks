@@ -1,0 +1,66 @@
+# This file created by conda-build 2.1.17
+# meta.yaml template originally from:
+# /home/cio/continuum/conda/conda.recipe, last modified Mon Jul 24 10:55:55 2017
+# ------------------------------------------------
+
+package:
+    name: conda
+    version: 4.3.23
+source:
+    path: /home/cio/continuum/conda
+build:
+    always_include_files:
+        - bin/conda
+        - bin/activate
+        - bin/deactivate
+    entry_points:
+        - conda = conda.cli:main
+        - conda-env = conda_env.cli.main:main
+    noarch: ''
+    noarch_python: false
+    string: py27_0
+requirements:
+    build:
+        - tk 8.5.18 0
+        - python 2.7.13 0
+        - setuptools 27.2.0 py27_0
+        - readline 6.2 2
+        - sqlite 3.13.0 0
+        - wheel 0.29.0 py27_0
+        - zlib 1.2.8 3
+        - pip 9.0.1 py27_1
+        - openssl 1.0.2l 0
+    run:
+        - python
+        - conda-env >=2.6
+        - enum34
+        - pycosat >=0.6.1
+        - pyopenssl >=16.2.0
+        - requests >=2.12.4
+        - ruamel_yaml >=0.11.14
+test:
+    commands:
+        - conda --version
+        - conda info
+    imports:
+        - conda
+about:
+    description: 'Conda is an open source package management system and environment
+
+        management system for installing multiple versions of software packages
+
+        and their dependencies and switching easily between them. It works on
+
+        Linux, OS X and Windows, and was created for Python programs but can
+
+        package and distribute any software.
+
+        '
+    dev_url: https://github.com/conda/conda
+    doc_url: http://conda.pydata.org/docs/
+    home: http://conda.pydata.org/
+    license: BSD
+    license_file: LICENSE.txt
+    summary: OS-agnostic, system-level binary package and environment manager.
+extra:
+    final: true

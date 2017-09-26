@@ -1,0 +1,60 @@
+# This file created by conda-build 1.21.11+0.g5b44ab3.dirty
+# meta.yaml template originally from:
+# /home/travis/build/quantopian/zipline/conda/zipline, last modified Wed Jul  5 21:45:18 2017
+# ------------------------------------------------
+
+package:
+    name: zipline
+    version: 1.1.1
+source:
+    git_url: ../../
+build:
+    number: '0'
+    string: np111py27_0
+requirements:
+    build:
+        - python 2.7*
+        - numpy x.x
+        - cython ==0.25.2
+    run:
+        - python
+        - pip >=7.1.0
+        - setuptools >18.0
+        - logbook >=0.12.5
+        - pytz >=2016.4
+        - numpy x.x
+        - requests-file >=1.4.1
+        - scipy >=0.17.1
+        - pandas >=0.18.1,<0.19
+        - pandas-datareader >=0.2.1
+        - patsy >=0.4.0
+        - statsmodels >=0.6.1
+        - python-dateutil >=2.4.2
+        - six >=1.10.0
+        - requests >=2.9.1
+        - cython >=0.25.2
+        - cyordereddict >=0.2.2
+        - bottleneck >=1.0.0
+        - contextlib2 >=0.4.0
+        - decorator >=4.0.0
+        - networkx >=1.9.1
+        - numexpr >=2.6.1
+        - bcolz >=0.12.1,<1
+        - click >=4.0.0
+        - toolz >=0.8.2
+        - multipledispatch >=0.4.8
+        - markupsafe >=0.23
+        - mako >=1.0.1
+        - sqlalchemy >=1.0.8
+        - alembic >=0.7.7
+        - sortedcontainers >=1.4.4
+        - intervaltree >=2.1.0
+        - lru-dict >=1.1.4
+        - empyrical >=0.2.2
+        - pytables >=3.3.0
+test:
+    imports:
+        - zipline
+about:
+    home: https://zipline.io
+    license: Apache Software License
