@@ -1,7 +1,0 @@
-/opt/anaconda1anaconda2anaconda3 text bin/pcre-config
-/opt/anaconda1anaconda2anaconda3 text lib/libpcre.la
-/opt/anaconda1anaconda2anaconda3 text lib/libpcrecpp.la
-/opt/anaconda1anaconda2anaconda3 text lib/libpcreposix.la
-/opt/anaconda1anaconda2anaconda3 text lib/pkgconfig/libpcre.pc
-/opt/anaconda1anaconda2anaconda3 text lib/pkgconfig/libpcrecpp.pc
-/opt/anaconda1anaconda2anaconda3 text lib/pkgconfig/libpcreposix.pc
