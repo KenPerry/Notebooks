@@ -39,7 +39,8 @@ class SelectColumnsTransformer(BaseEstimator, TransformerMixin):
         trans : pandas DataFrame
             contains selected columns of X      
         """
-        trans = X[self.columns].copy() 
+        trans = X[self.columns].copy()
+
         return trans
 
     def fit(self, X, y=None, **fit_params):
@@ -59,7 +60,6 @@ class SelectColumnsTransformer(BaseEstimator, TransformerMixin):
     
 
 
-# In[17]:
 
 class DataFrameFunctionTransformer(BaseEstimator, TransformerMixin):
     """ A DataFrame transformer providing imputation or function application
@@ -208,11 +208,10 @@ class GenSelectAttrsTransformer(BaseEstimator, TransformerMixin):
         trans : pandas DataFrame
             contains selected columns of X      
         """
-        # colType = type(X.columns).__name__
-        # if (re.match('MultiIndex$', colType)):
             
         if isinstance(X.columns, pd.MultiIndex):
             trans = X.loc[:, idx[self.columns,:] ] .copy()
+
             if (len(self.columns) == 1 and self.dropSingle):
                 trans.columns = trans.columns.droplevel(0)
         else:
@@ -244,8 +243,10 @@ class GenRenameAttrsTransformer(BaseEstimator, TransformerMixin):
     None
     
     """
-    def __init__(self, func):
+    def __init__(self, func, **init_params):
         self.func = func
+        self.init_params = init_params
+        
         return
 
     def transform(self, X, **transform_params):
@@ -261,8 +262,22 @@ class GenRenameAttrsTransformer(BaseEstimator, TransformerMixin):
         trans : pandas DataFrame
             contains renamed columns of X      
         """
-        
-        trans = X.rename(columns=self.func).copy()
+
+        if self.init_params and "level" in self.init_params:
+            if pd.__version__ > "0.20.0":
+                trans = X.rename(columns=self.func, **self.init_params).copy()
+            else:
+                print("transform: pandas version <= 0.20.")
+                
+                level = self.init_params["level"]
+                newColNames = X.columns.levels[level].map(self.func)
+                    
+                trans = X.copy()
+                trans.columns = trans.columns.set_levels(newColNames, **self.init_params)
+                
+        else:
+            trans = X.rename(columns=self.func).copy()
+            
         
         return trans
 
@@ -652,4 +667,63 @@ class DatetimeIndexTransformer(BaseEstimator, TransformerMixin):
         """
         return self
 
+
+class DataFrameConcat(BaseEstimator, TransformerMixin):
+    """ A DataFrame transformer that concatenates this dataframe to the pipeline output
+    
+    
+    Parameters
+    ----------
+    list_of_dfs : list of DataFrames
+        
+    """ 
+    def __init__(self, list_of_dfs):
+        self.list_of_dfs = list_of_dfs
+        
+    def transform(self, X, **transformparamn): 
+        """ Concatenates the DataFrames in the list to df X
+        
+        Parameters
+        ----------
+        X : pandas DataFrame
+        
+        Returns
+        ----------
+        concatted :  pandas DataFrame
+        
+        """
+
+        list_of_dfs = self.fitted_transformers_
+
+        # Prepend X to list, if it is non-empty
+        if (X.shape[0] > 0):
+            list_of_dfs.insert(0, X.copy())
+
+        # Concatenate the dataframes
+        concatted = pd.concat(list_of_dfs, axis=1).copy()
+
+        # Always a good idea to sort after altering an index (either axis)
+        concatted.sortlevel(axis=0, inplace=True)
+        concatted.sortlevel(axis=1, inplace=True)
+
+        return concatted
+
+
+    def fit(self, X, y=None, **fitparams):
+        """ Adds DataFrame Transformers
+        
+        Parameters
+        ----------
+        X : pandas DataFrame
+        y : not used, API requirement
+        
+        Returns
+        ----------
+        self : object
+        """
+        
+        self.fitted_transformers_ = []
+        for df in self.list_of_dfs:
+            self.fitted_transformers_.append(df.copy())
+        return self
 
