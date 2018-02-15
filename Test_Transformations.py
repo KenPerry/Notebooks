@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[1]:
+# In[92]:
 
 from IPython.core.interactiveshell import InteractiveShell
 InteractiveShell.ast_node_interactivity = "all"
@@ -11,7 +11,7 @@ get_ipython().magic('load_ext autoreload')
 get_ipython().magic('autoreload 1')
 
 
-# In[2]:
+# In[93]:
 
 import pandas as pd
 idx = pd.IndexSlice
@@ -40,7 +40,7 @@ rankTrans = DataFrameFunctionTransformer(func = lambda s: s.rank(method="first")
 pctOnlyTrans = GenSelectAttrsTransformer(['Pct'], dropSingle=False )
 
 
-# In[3]:
+# In[94]:
 
 get_ipython().magic('aimport trans.data')
 ai = gd.combine_data(['FB', 'AAPL', 'AMZN', 
@@ -48,7 +48,7 @@ ai = gd.combine_data(['FB', 'AAPL', 'AMZN',
 ai.head()
 
 
-# In[4]:
+# In[95]:
 
 #all_ids = pd.concat([ all, ids_all ], axis=1)
 #all_ids.head()
@@ -90,7 +90,7 @@ fud2.head()
 fud2.index
 
 
-# In[5]:
+# In[96]:
 
 from trans.reg import Reg
 
@@ -104,10 +104,10 @@ fup = pipe_pct_only.fit_transform(fud2)
 r = Reg(fup)
 
 
-# In[6]:
+# In[97]:
 
 rn = Reg(fup.dropna(axis=0, how="any"))
-ma = rn.modelAttrs( [ idx["Pct", "SPY"]])
+ma = rn.modelCols( [ idx["Pct", "SPY"]])
 (i,d) = ma
 
 (a1, e1) = ("01/01/2000", "04/14/2000")
@@ -124,7 +124,7 @@ res_df
 
 # ## One pipeline to make data
 
-# In[7]:
+# In[98]:
 
 pipe_close = make_pipeline(GenSelectAttrsTransformer(['Adj Close'], dropSingle=True )
                       )   
@@ -147,7 +147,7 @@ data_df.head()
 
 # ## Second pipeline to prepare the data for regression
 
-# In[8]:
+# In[99]:
 
 reg_input_pl = make_pipeline(  pctOnlyTrans,
                          RestrictToCalendarColTransformer( ("Pct", "SPY")),
@@ -161,7 +161,7 @@ so1.head()
 
 # ## One big pipeline for both
 
-# In[9]:
+# In[100]:
 
 pipe_nn = make_pipeline( featUn,
                          DatetimeIndexTransformer("Dt"),
@@ -174,11 +174,11 @@ so2 = pipe_nn.fit_transform(ai)
 so2.head()
 
 
-# In[10]:
+# In[101]:
 
 
 ra = Reg(so1)
-ma = ra.modelAttrs( [ idx["Pct", "SPY"]])
+ma = ra.modelCols( [ idx["Pct", "SPY"]])
 ma
 
 beta_df = ra.rollingModelAll( *ma, #idx["Pct", "AAPL"],
@@ -190,32 +190,42 @@ beta_df = ra.rollingModelAll( *ma, #idx["Pct", "AAPL"],
 beta_df.tail()
 
 
-# In[11]:
+# In[102]:
 
 beta_df.shape
 
 
 # ## Remember that the index for betas is at a lower frequency than index for data
 
-# In[12]:
+# In[103]:
 
 data_df.index
 beta_df.index
 
 
-# In[38]:
+# In[104]:
+
 
 concatTrans = DataFrameConcat( [ data_df, beta_df ])
 ret_and_beta_df = concatTrans.fit_transform(pd.DataFrame())
 ret_and_beta_df.tail()
 ret_and_beta_df.shape
 
+
+# In[105]:
+
 gd.save_data(data_df, "ret_df.pkl")
 gd.save_data(beta_df, "beta_df.pkl")
 gd.save_data(ret_and_beta_df, "ret_and_beta_df.pkl")
 
 
-# In[36]:
+# In[106]:
+
+ret_df = gd.load_data("ret_df.pkl")
+beta_df = gd.load_data("beta_df.pkl")
+
+
+# In[107]:
 
 from trans.gtrans import *
 
@@ -230,26 +240,20 @@ r_and_b_df.tail( )
 r_and_b_df.shape
 
 
-# In[13]:
-
-ret_df = gd.load_data("ret_df.pkl")
-beta_df = gd.load_data("beta_df.pkl")
-
-
-# In[12]:
+# In[108]:
 
 ret_and_beta_df = gd.load_data("ret_and_beta_df.pkl")
 
 
-# In[75]:
+# In[109]:
 
 cols = beta_df.columns.get_level_values(0).unique().tolist()
 betaCols = [ c for c in cols if re.search('^Beta', c) ]
-betaCols.insert(0, 'Intercept')
+
 betaCols
 
 
-# In[58]:
+# In[110]:
 
 get_ipython().magic('aimport trans.gtrans')
 beta_r_pl = make_pipeline( GenSelectAttrsTransformer(betaCols),
@@ -260,7 +264,7 @@ beta_rolled_df = beta_r_pl.fit_transform(ret_and_beta_df)
 beta_rolled_df.tail()
 
 
-# In[59]:
+# In[111]:
 
 ret_and_beta_df.shape
 beta_rolled_df.shape
@@ -270,33 +274,62 @@ ret_and_rolled_beta_df = ret_and_rolled_beta_pl.fit_transform( pd.DataFrame() )
 ret_and_rolled_beta_df.tail()
 
 
-# In[60]:
+# In[112]:
 
 ret_and_rolled_beta_df.columns
 
 
 # ## Really need to select Dep vars, ind vars, not just Pct
 
-# In[78]:
+# In[113]:
 
-ret_df = GenSelectAttrsTransformer(['Pct']).fit_transform(ret_and_rolled_beta_df)
-ret_df.tail()
-cols = ret_and_rolled_beta_df.columns.get_level_values(0).unique().tolist()
-
-betaFwdCols = [ c for c in cols if re.search('^Beta \d+ rolled fwd$', c) ]
+reg = Reg(ret_and_rolled_beta_df)
 
 
-rolled_beta_df = GenSelectAttrsTransformer(betaFwdCols).fit_transform(ret_and_rolled_beta_df)
-rolled_beta_df.tail()
+# In[114]:
 
+sensAttrs = reg.sensAttrs(ret_and_rolled_beta_df, '^Beta \d+ rolled fwd$')
+sensAttrs
+
+
+# In[115]:
+
+depTickers = reg.depTickersFromSensAttrs(ret_and_rolled_beta_df, sensAttrs )
+depTickers
+depCols = [ ("Pct", t) for t in depTickers ]
+depCols
+
+
+# In[116]:
+
+reg.addConst(ret_and_rolled_beta_df,("Pct", "1"), 1)
+
+
+# In[117]:
+
+indCols = [ ("Pct", "1"), ("Pct", "SPY")]
+indCols
+
+
+# In[118]:
+
+reg_df =reg.retAttrib(ret_and_rolled_beta_df, 
+            indCols,
+            depCols, 
+            sensAttrs)
+
+
+# In[119]:
+
+reg_df.tail()
 
 
 # ## What follows are individual tests for regression
 
-# In[94]:
+# In[28]:
 
 r = Reg(fup)
-ma = r.modelAttrs( [ idx["Pct", "SPY"]])
+ma = r.modelCols( [ idx["Pct", "SPY"]])
 ma
 
 res_df = r.rollingModel( i,  d[1], #idx["Pct", "AAPL"],
