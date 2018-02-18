@@ -172,10 +172,66 @@ class DataFrameFeatureUnion(BaseEstimator, TransformerMixin):
             self.fitted_transformers_.append(fitted_trans)
         return self
 
+class AddAttrTransformer(BaseEstimator, TransformerMixin):
+    """ 
+    A DataFrame transformer that adds an attribute to an DataFrame that has simple columns (i.e., non-MultiIndex columns)
+    
+    Parameters
+    ----------
+    dest_attr: string, name of created attribute
+    
+    """
+    
+    def __init__(self, dest_attr):
+        self.dest_attr = dest_attr
 
+
+    def transform(self, X, **transform_params):
+        """ 
+        Adds dest_attr as level 0 of the new MultiIndex for column names
+        
+        Parameters
+        ----------
+        X : pandas DataFrame (ignored)
+            
+        Returns
+        ----------
+        
+        trans : pandas DataFrame that is copy of X but with a MultiIndex for column names
+
+        """
+
+        dest_attr = self.dest_attr
+        trans = X.copy()
+
+        # Create tuple for each column: (dest_attr, c)
+        cols_w_attr = [ (dest_attr, c) for c in trans.columns] 
+
+        trans.columns = pd.MultiIndex.from_tuples(cols_w_attr)
+
+        return trans
+
+    def fit(self, X, y=None, **fit_params):
+        """ 
+        Do nothing
+
+        Parameters
+        ----------
+        X : pandas DataFrame
+        y : default None
+                
+        
+        Returns
+        ----------
+        self  
+        """
+
+        return self
+    
 
 class GenSelectAttrsTransformer(BaseEstimator, TransformerMixin):
-    """ A DataFrame transformer that provides column selection
+    """ 
+    A DataFrame transformer that provides column selection
     
     Allows to select columns by name from pandas dataframes in scikit-learn
     pipelines.
@@ -210,7 +266,20 @@ class GenSelectAttrsTransformer(BaseEstimator, TransformerMixin):
         """
             
         if isinstance(X.columns, pd.MultiIndex):
+            # NOTE: although we are selecting a sub-set of attributes, ALL the attributes remain, even if they are not used !
             trans = X.loc[:, idx[self.columns,:] ] .copy()
+
+            # Drop the unused attributes
+            if pd.__version__ > "0.20.0":
+                trans.columns.remove_unused_levels(inplace=True)
+            else:
+                # Get the active column names (as pairs) and re-create column MultiIndex
+                z  = list( zip(trans.columns.get_level_values(0), trans.columns.get_level_values(1)) )
+                mi = pd.MultiIndex.from_tuples(z)
+
+                trans.columns = mi
+                trans.sortlevel(axis=1, inplace=True)
+            
 
             if (len(self.columns) == 1 and self.dropSingle):
                 trans.columns = trans.columns.droplevel(0)
@@ -233,6 +302,51 @@ class GenSelectAttrsTransformer(BaseEstimator, TransformerMixin):
         """
         return self
 
+
+class ShiftTransformer(BaseEstimator, TransformerMixin):
+    """ 
+    A DataFrame transformer that shifts the DataFrame
+    
+    
+    Parameters
+    ----------
+    periods: amount to shift.  df_result.iloc[ i+ periods ] = df.iloc[ i ]
+
+    
+    """
+    def __init__(self, periods=1):
+        self.periods    = periods
+
+    def transform(self, X, **transform_params):
+        """ Selects columns of a DataFrame
+        
+        Parameters
+        ----------
+        X : pandas DataFrame
+            
+        Returns
+        ----------
+        
+        trans : pandas DataFrame
+            shifted X
+        """
+        # Shift the DataFrame
+        trans = X.shift( self.periods ).copy()
+        return trans
+
+    def fit(self, X, y=None, **fit_params):
+        """ Do nothing function
+        
+        Parameters
+        ----------
+        X : pandas DataFrame
+                
+        
+        Returns
+        ----------
+        self  
+        """
+        return self
 
 class GenRenameAttrsTransformer(BaseEstimator, TransformerMixin):
     """ A DataFrame transformer that renames columns
@@ -271,7 +385,7 @@ class GenRenameAttrsTransformer(BaseEstimator, TransformerMixin):
                 
                 level = self.init_params["level"]
                 newColNames = X.columns.levels[level].map(self.func)
-                    
+
                 trans = X.copy()
                 trans.columns = trans.columns.set_levels(newColNames, **self.init_params)
                 
@@ -669,7 +783,10 @@ class DatetimeIndexTransformer(BaseEstimator, TransformerMixin):
 
 
 class DataFrameConcat(BaseEstimator, TransformerMixin):
-    """ A DataFrame transformer that concatenates this dataframe to the pipeline output
+    """ 
+    A DataFrame transformer that concatenates this dataframe to the pipeline output
+
+    It differs from the Union transformers in that it takes DataFrames, NOT Pipelines, as arguments
     
     
     Parameters
@@ -677,11 +794,13 @@ class DataFrameConcat(BaseEstimator, TransformerMixin):
     list_of_dfs : list of DataFrames
         
     """ 
-    def __init__(self, list_of_dfs):
+    def __init__(self, list_of_dfs, df_keys=None):
         self.list_of_dfs = list_of_dfs
+        self.df_keys = df_keys
         
     def transform(self, X, **transformparamn): 
-        """ Concatenates the DataFrames in the list to df X
+        """
+        Concatenates the DataFrames in the list to df X
         
         Parameters
         ----------
@@ -700,7 +819,11 @@ class DataFrameConcat(BaseEstimator, TransformerMixin):
             list_of_dfs.insert(0, X.copy())
 
         # Concatenate the dataframes
-        concatted = pd.concat(list_of_dfs, axis=1).copy()
+        if self.df_keys:
+            concatted = pd.concat(list_of_dfs, axis=1, keys=self.df_keys).copy()
+        else:
+            concatted = pd.concat(list_of_dfs, axis=1).copy()
+
 
         # Always a good idea to sort after altering an index (either axis)
         concatted.sortlevel(axis=0, inplace=True)
@@ -727,3 +850,296 @@ class DataFrameConcat(BaseEstimator, TransformerMixin):
             self.fitted_transformers_.append(df.copy())
         return self
 
+
+rankTrans = DataFrameFunctionTransformer(func = lambda s: s.rank(method="first"), axis=1)
+pctTrans  = DataFrameFunctionTransformer(func = lambda s: s.pct_change())
+
+class GenRetAttrTransformer(BaseEstimator, TransformerMixin):
+    """ 
+    A DataFrame transformer that provides relative changes in an Attribute
+    
+    Parameters
+    ----------
+    src_attr:  string, name of attribute containing source data (src)
+    period:    integer, amount to shift source data
+    src_shift_attr: string, name of created attribute that will contain the source data, shifted by period (src_shift)
+    dest_attr: string, name of created attribute that will contain the relative data: (src/src_shift - 1)
+    
+    """
+    
+    def __init__(self, src_attr, src_shift_attr, dest_attr, periods=1):
+        self.src_attr = src_attr
+        self.src_shift_attr = src_shift_attr
+        self.dest_attr = dest_attr
+        self.periods = periods
+
+    def transform(self, X, **transform_params):
+        """ 
+        Performs the relative calculation  (src/src_shift -1)
+        
+        Parameters
+        ----------
+        X : pandas DataFrame (ignored)
+            
+        Returns
+        ----------
+        
+        trans : pandas DataFrame containing two attributes: src_shift_attr and dest_attr
+          dest_attr contains (src/src_shift -1)
+
+        """
+        
+        src_df, src_shift_df = self.src_df, self.src_shift_df
+        src_shift_attr, dest_attr = self.src_shift_attr, self.dest_attr
+
+        
+        dest_df = (src_df/src_shift_df -1)
+        concat_pl = DataFrameConcat( [ src_shift_df, dest_df ], df_keys = [ src_shift_attr, dest_attr ] )
+        trans = concat_pl.fit_transform( pd.DataFrame() )
+
+        return trans
+
+    def fit(self, X, y=None, **fit_params):
+        """ 
+        Store source data (src_df) and source data shifted by period (src_shift_df) in self
+        
+        Parameters
+        ----------
+        X : pandas DataFrame
+        y : default None
+                
+        
+        Returns
+        ----------
+        self  
+        """
+
+        src_attr = self.src_attr
+        
+        src_pl       = make_pipeline( GenSelectAttrsTransformer ( [ src_attr ],
+                                                                  dropSingle=True
+                                                                  )
+                                      )
+
+        src_shift_pl = make_pipeline( GenSelectAttrsTransformer ( [ src_attr ],
+                                                                  dropSingle=True
+                                                                  ),
+                                      ShiftTransformer( self.periods )
+                                      )
+
+
+        src_df       = src_pl.fit_transform(X)
+        src_shift_df = src_shift_pl.fit_transform( X )
+
+        self.src_df   = src_df
+        self.src_shift_df = src_shift_df
+        
+        return self
+    
+
+
+
+class GenRankEndOfPeriodAttrTransformer(BaseEstimator, TransformerMixin):
+    """ 
+    A DataFrame transformer that provides relative changes in an Attribute
+    
+    Parameters
+    ----------
+    src_attr:  string, name of attribute containing source data that will be used in ranking
+    univ:      array,  names of columns (level 1) that are to be included in the ranking universe
+    dest_attr: string, name of created attribute that will contain the ranks to use
+    eop_df:    DataFrame.  Frequency is only end of ranking period (e.g., end of month).  Ranking is done according to eop_df.loc[:, src_attr]
+
+    NOTE: Ranks are computed at the date corresponding to end of period.  However, the computed ranks are applied FORWARD, to each DAY of the following period
+          e.g., the rank computed at end of month M is used for each day of month M+1
+    
+    """
+    
+    def __init__(self, eop_df, src_attr, univ, dest_attr):
+        self.eop_df = eop_df
+        self.univ = univ
+        self.src_attr = src_attr
+        self.dest_attr = dest_attr
+
+    def transform(self, X, **transform_params):
+        """ 
+        Takes the prior period rank and applies it forward to each day of following period
+        
+        Parameters
+        ----------
+        X : pandas DataFrame (ignored)
+            
+        Returns
+        ----------
+        
+        trans : pandas DataFrame containing two attributes: src_shift_attr and dest_attr
+          dest_attr contains (src/src_shift -1)
+
+        """
+
+        dest_attr = self.dest_attr
+        rank_df = self.rank_df
+
+        # The ranks computed at end of period are used for the FOLLOWING period. Shift forward one period
+        shift_pl = make_pipeline( ShiftTransformer(1) )
+        rank_shift_df = shift_pl.fit_transform( rank_df )
+
+        # Convert the end of period frequency to the same index as X (usually, at daily frequency instead of end of period frequency)
+        rank_shift_daily_df = pd.concat(  [rank_shift_df,  pd.DataFrame(index=X.index) ], axis=1 )
+
+        # Always a good idea to sort after altering an index (either axis)
+        rank_shift_daily_df.sortlevel(axis=0, inplace=True)
+        rank_shift_daily_df.sortlevel(axis=1, inplace=True)
+
+
+        # We now have the ranks, pushed forward to end of following period.  Backfill daily for the entire month. Result attribute is dest_attr
+        bfill_pl = make_pipeline( FillNullTransformer(method="bfill"),
+                                  AddAttrTransformer( dest_attr )
+                                  )
+
+        rank_shift_daily_df = bfill_pl.fit_transform( rank_shift_daily_df )
+
+        trans = rank_shift_daily_df
+
+        return trans
+
+    def fit(self, X, y=None, **fit_params):
+        """ 
+        Computes the end of period rank (of the src_attr, over the universe univ), using the end of period DataFrame eop_df
+        
+        Parameters
+        ----------
+        X : pandas DataFrame
+        y : default None
+                
+        
+        Returns
+        ----------
+        self  
+        """
+
+        univ = self.univ
+        src_attr = self.src_attr
+        dest_attr = self.dest_attr
+        eop_df   = self.eop_df
+        
+
+        # Rank the end of period dataframe, using the src_attr
+        # For ranking: select only the attribute src_attr of the tickers in the universe univ
+        rank_pl = make_pipeline( GenSelectAttrsTransformer( [ src_attr ], dropSingle=True ),
+                                 SelectColumnsTransformer(univ),
+                                 rankTrans
+                                 )
+
+        ## The alternate way of selecting only the universe columns for src_attr is:
+        ##   univ_cols = [ (src_attr, t) for t in univ ]
+        ##   SelectColumnsTransformer( univ_cols )
+
+        rank_df = rank_pl.fit_transform( eop_df )
+        self.rank_df = rank_df
+        
+        return self
+    
+
+
+
+class GenRankToPortRetTransformer(BaseEstimator, TransformerMixin):
+    """ 
+    A DataFrame transformer that computes a portfolio return based on ranks
+    We will compute a weights attribute wt_attr, based on the ranks (rank_attr of the rank_df DataFrame: rank_df.loc[:, idx[rank_attr,:] ])
+    The weights will multiply the data (src_attr of the transform source DataFrame X: X.loc[:, idx[src_attr,:] ] )
+    The portfolio return (weighted sum of products) will be stored in column dest_col with attribute src_attr
+    
+    Parameters
+    ----------
+    src_attr: string, the source attribute in transform source DataFrame X
+
+    rank_df:  DataFrame, containing the ranks.  Level 1 columns of src_df and rank_df should be consistent
+    rank_attr:string, attribute of the rank, in rank_df, i.e., rank is rank_df[:, idx[rank_attr,:] ]
+
+    wt_attr:  string, the name of the new "weight" atttribute that will be created
+    dest_col:string,  the name of the column that will be added (with attribute src_attr) that contains the portfolio return
+
+    Returns:
+    trans: DataFrame with attributes (wt_attr, src_attr)
+      trans[:, idx[wt_attr,;]]  will contain the weights, based on ranks
+      trans[:, idx[src_attr,:]] will contain the weighted returns, plus the sum of the weighted returns at trans[:, idx[src_attr, dest_col]]
+    
+    """
+    
+    def __init__(self, src_attr, rank_df, rank_attr, wt_attr, dest_col):
+        self.src_attr = src_attr
+        self.rank_df = rank_df
+        self.rank_attr = rank_attr
+        self.wt_attr = wt_attr
+        self.dest_col = dest_col
+
+    def transform(self, X, **transform_params):
+        """ 
+        Takes the prior period rank and applies it forward to each day of following period
+        
+        Parameters
+        ----------
+        X : pandas DataFrame (ignored)
+            
+        Returns
+        ----------
+        
+        trans : DataFrame
+        wt
+
+        """
+
+        src_attr, dest_col =  self.src_attr, self.dest_col
+        wt_attr = self.wt_attr
+        wt_df = self.wt_df
+
+        # Select the source attribute src_attr from the source DataFrame src_df
+        ret_pl = make_pipeline( GenSelectAttrsTransformer( [ src_attr ], dropSingle=True ) )
+        ret_df = ret_pl.fit_transform( X )
+
+        # Compute weighted returns
+        wt_ret_df = wt_df * ret_df
+
+        # Portfolio return is sum of the weighted returns
+        sum_series = wt_ret_df.sum(axis=1)
+
+        # Add the Portfolio Return to the weighted returns df
+        wt_ret_df.loc[:, dest_col ] = sum_series
+
+        # Return df:
+        trans_pl = DataFrameConcat( [ wt_df, wt_ret_df ], df_keys=[ wt_attr, src_attr ] )
+        trans    = trans_pl.fit_transform( pd.DataFrame() )
+        
+        return trans
+
+    def fit(self, X, y=None, **fit_params):
+        """ 
+        Computes the end of "weight" attribute, based on the rank_attr of the rank_df
+        
+        Parameters
+        ----------
+        X : pandas DataFrame
+        y : default None
+                
+        
+        Returns
+        ----------
+        self  
+        """
+
+        rank_df, rank_attr = self.rank_df, self.rank_attr
+        
+        hi_rank, lo_rank = 5, 1
+        hmlWtTrans = DataFrameFunctionTransformer(func = lambda s: (s >= hi_rank) * 1.0 + (s <= lo_rank) * -1.0)
+        
+        wt_pl = make_pipeline( GenSelectAttrsTransformer( [ rank_attr ], dropSingle=True),
+                               hmlWtTrans
+                               )
+
+        wt_df = wt_pl.fit_transform(rank_df)
+
+        self.wt_df = wt_df
+        
+        return self
+    
