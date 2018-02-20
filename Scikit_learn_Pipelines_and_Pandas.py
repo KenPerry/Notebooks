@@ -340,13 +340,13 @@ remaining_cols_pipeline = make_pipeline(
 # ### Uniting the pipelines
 # We put the pipelines together using the DataFrameFeatureUnion transformer. To demonstrate that we get a DataFrame we simply use fit_transform on the training set and show the first rows
 
-# In[34]:
+# In[8]:
 
 print("Training has {} columns:\n".format(len(X_train.columns)))
 X_train.columns
 
 
-# In[42]:
+# In[9]:
 
 print("There are {} area columns:\n".format(len(area_cols)))
 area_cols
@@ -361,7 +361,7 @@ transformed_area_cols = play_area_features.fit_transform(X_train).columns
 transformed_area_cols
 
 
-# In[43]:
+# In[10]:
 
 print("There are {} categorical columns:\n".format(len(object_columns)))
 object_columns
@@ -375,12 +375,12 @@ transformed_cat_cols = play_cat_features.fit_transform(X_train).columns
 transformed_cat_cols
 
 
-# In[37]:
+# In[11]:
 
 print("There are {} other columns:\n".format(len(remaining_cols)))
 
 
-# In[44]:
+# In[12]:
 
 print("So, after transformation, result should have {} columns.".format(
        len(transformed_area_cols) + len(transformed_cat_cols) + len(remaining_cols)
@@ -388,7 +388,7 @@ print("So, after transformation, result should have {} columns.".format(
      )
 
 
-# In[8]:
+# In[13]:
 
 preprocessing_features = DataFrameFeatureUnion([area_cols_pipeline, categorical_cols_pipeline, remaining_cols_pipeline])
 preprocessing_features.fit_transform(X_train).head()
@@ -398,6 +398,27 @@ preprocessing_features.fit_transform(X_train).head()
 # We use nested cross validation to estimate the generalization performance. See the 3rd example [here](http://scikit-learn.org/stable/modules/grid_search.html#grid-search)
 # 
 # Unfortunately, nested cross validation is not able to return the best model parameters for each fold ([and probably never will be](https://github.com/scikit-learn/scikit-learn/issues/6827)). However, for simplicity, we just assume that the model parameters are stable across the cross validation folds on the training sets.
+
+# In[14]:
+
+from sklearn.linear_model import LinearRegression
+pipe_lr = make_pipeline(preprocessing_features, LinearRegression())
+
+
+# In[27]:
+
+pf = pipe_lr.fit(X_train, np.log(y_train))
+pf.get_params()
+
+
+# In[30]:
+
+ppf = preprocessing_features.fit_transform(X_train)
+lr = LinearRegression()
+rr = lr.fit( ppf, np.log(y_train))
+rr.coef_.shape
+rr.get_params()
+
 
 # In[45]:
 

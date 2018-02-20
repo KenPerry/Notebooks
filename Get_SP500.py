@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[84]:
+# In[1]:
 
 from IPython.core.interactiveshell import InteractiveShell
 InteractiveShell.ast_node_interactivity = "all"
@@ -18,7 +18,7 @@ get_ipython().magic('autoreload 1')
 
 
 
-# In[25]:
+# In[2]:
 
 import bs4 as bs
 import datetime as dt
@@ -127,7 +127,7 @@ import re
 sp500_tickers
 
 
-# In[110]:
+# In[6]:
 
 get_data_from_yahoo()
 

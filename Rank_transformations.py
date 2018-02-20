@@ -121,15 +121,17 @@ next_period_rank_df.loc[ "11/25/2017":"12/01/2017"]
 
 # ## Create HML portfolio return
 
-# In[41]:
+# In[13]:
 
 wt_attr = "HML weight"
 portret_attr = "Port"
+hi_rank, lo_rank = 5, 1
 
 portret_pl = make_pipeline(  GenRankToPortRetTransformer(
     ret_attr,
     next_period_rank_df,
     monthly_rank_attr,
+    lambda s: (s >= hi_rank) * 1.0 + (s <= lo_rank) * -1.0,
     wt_attr,
     portret_attr
 )
@@ -138,4 +140,9 @@ portret_pl = make_pipeline(  GenRankToPortRetTransformer(
 port_ret_df = portret_pl.fit_transform( ret_df )
 
 port_ret_df.loc[ "11/25/2017":"12/01/2017"]
+
+
+# In[14]:
+
+port_ret_df.shape
 

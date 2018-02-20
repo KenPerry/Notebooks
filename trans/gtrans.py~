@@ -941,8 +941,7 @@ class GenRetAttrTransformer(BaseEstimator, TransformerMixin):
 
 class GenRankEndOfPeriodAttrTransformer(BaseEstimator, TransformerMixin):
     """ 
-    A DataFrame transformer that provides a ranking -- at each end-of-period -- across an attribute
-    e.g., rank cross-section of monthly returns
+    A DataFrame transformer that provides relative changes in an Attribute
     
     Parameters
     ----------
@@ -1047,13 +1046,9 @@ class GenRankEndOfPeriodAttrTransformer(BaseEstimator, TransformerMixin):
 class GenRankToPortRetTransformer(BaseEstimator, TransformerMixin):
     """ 
     A DataFrame transformer that computes a portfolio return based on ranks
-
     We will compute a weights attribute wt_attr, based on the ranks (rank_attr of the rank_df DataFrame: rank_df.loc[:, idx[rank_attr,:] ])
     The weights will multiply the data (src_attr of the transform source DataFrame X: X.loc[:, idx[src_attr,:] ] )
     The portfolio return (weighted sum of products) will be stored in column dest_col with attribute src_attr
-
-    The weights are computed from the ranks by the function rank_to_wt_func,
-    e.g., lambda s: (s >= hi_rank) * 1.0 + (s <= lo_rank) * -1.0
     
     Parameters
     ----------
@@ -1072,10 +1067,10 @@ class GenRankToPortRetTransformer(BaseEstimator, TransformerMixin):
     
     """
     
-    def __init__(self, src_attr, rank_df, rank_attr, rank_to_wt_func, wt_attr, dest_col):
+    def __init__(self, src_attr, rank_df, rank_attr, wt_attr, dest_col):
         self.src_attr = src_attr
-        self.rank_df, self.rank_attr, self.rank_to_wt_func = rank_df, rank_attr, rank_to_wt_func
-        
+        self.rank_df = rank_df
+        self.rank_attr = rank_attr
         self.wt_attr = wt_attr
         self.dest_col = dest_col
 
@@ -1133,11 +1128,10 @@ class GenRankToPortRetTransformer(BaseEstimator, TransformerMixin):
         self  
         """
 
-        rank_df, rank_attr, rank_to_wt_func = self.rank_df, self.rank_attr, self.rank_to_wt_func
+        rank_df, rank_attr = self.rank_df, self.rank_attr
         
         hi_rank, lo_rank = 5, 1
-        # hmlWtTrans = DataFrameFunctionTransformer(func = lambda s: (s >= hi_rank) * 1.0 + (s <= lo_rank) * -1.0)
-        hmlWtTrans = DataFrameFunctionTransformer(func = rank_to_wt_func)
+        hmlWtTrans = DataFrameFunctionTransformer(func = lambda s: (s >= hi_rank) * 1.0 + (s <= lo_rank) * -1.0)
         
         wt_pl = make_pipeline( GenSelectAttrsTransformer( [ rank_attr ], dropSingle=True),
                                hmlWtTrans

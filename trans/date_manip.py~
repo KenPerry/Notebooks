@@ -1,0 +1,46 @@
+import numpy as np
+import pandas as pd
+
+import datetime as dt
+import dateutil.parser as dup
+
+import os
+import shutil
+
+import pickle
+import re
+
+idx = pd.IndexSlice
+
+class GetData:
+    def __init__(self, idx):
+        self.idx = idx
+
+        return
+
+    def periodic(self, end_d, ddelta):
+        """
+        Returns list of dates, ending with end_d, at frequency of datedelta ddelta
+
+        Parameters:
+        end_d: datetime end date
+        ddelta: datedelta, used to decrement from end_d
+
+        Returns:
+        list of dates
+        """
+        min_d = self.index.min()
+
+        result = [ end_d ]
+
+        prev_d = end_d - ddelta
+        while ( prev_d >= min_d ):
+            result.insert(0, prev_d)
+            prev_d = prev_d - ddelta
+
+
+        return result
+
+
+
+    

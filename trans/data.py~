@@ -46,7 +46,7 @@ class GetData:
     
     def save_sp500_tickers(self):
         """
-        Get the list of current tickers in the S&P 500
+        Get the list of curren tickers in the S&P 500
 
         The tickers are obtained by scraping a Wikipedia page, using Beautiful Soup
 

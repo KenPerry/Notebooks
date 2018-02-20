@@ -43,9 +43,9 @@ len(sp500_univ)
 univ = sp500_univ
 
 
-# In[ ]:
+# In[4]:
 
 get_ipython().magic('aimport trans.data')
 price_df = gd.combine_data( univ )
-price_df.head()
+price_df.shape
 

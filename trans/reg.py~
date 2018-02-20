@@ -118,7 +118,7 @@ class Reg:
         (e,s)  = (end, end - windowTimeDelta + oneDayTimeDelta)
 
         while (s >= start):
-            # NOTE: s,e are DateTimes so s:e are all the rows INCLUSIVE of e (as opposed to if s,e were integers, in which case last row is (e-1)
+            # thisMat = np.asarray( df.loc[s:e,:] )
             thisDf = df.loc[s:e,:]
 
             if self.Debug:
@@ -379,3 +379,4 @@ class Reg:
 
         return regRes_df
     
+
