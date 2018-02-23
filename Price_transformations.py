@@ -34,18 +34,21 @@ from trans.date_manip import Date_Manipulator
 gd = GetData()
 
 
-# In[3]:
+# In[7]:
 
 
-sp500_univ = gd.get_sp500_tickers()
-len(sp500_univ)
-
-univ = sp500_univ
+univ = gd.existing()
+len(univ)
 
 
-# In[4]:
 
-get_ipython().magic('aimport trans.data')
-price_df = gd.combine_data( univ )
+# In[5]:
+
+price_df = GetDataTransformer(None, cal_ticker="SPY").fit_transform( pd.DataFrame())
 price_df.shape
+
+
+# In[6]:
+
+gd.save_data(price_df, "price.pkl")
 

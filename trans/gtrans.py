@@ -3,11 +3,14 @@ import pandas as pd
 
 import datetime as dt
 import os
+import re
 
 from sklearn.base import TransformerMixin, BaseEstimator, clone
 from sklearn.pipeline import Pipeline, make_pipeline
 
-import re
+from trans.data import GetData
+
+
 
 idx = pd.IndexSlice
 
@@ -968,7 +971,7 @@ class GenRankEndOfPeriodAttrTransformer(BaseEstimator, TransformerMixin):
         
         Parameters
         ----------
-        X : pandas DataFrame (ignored)
+        X : pandas DataFrame (only X.index is used: to give the result the same index as X)
             
         Returns
         ----------
@@ -1068,6 +1071,15 @@ class GenRankToPortRetTransformer(BaseEstimator, TransformerMixin):
     Returns:
     trans: DataFrame with attributes (wt_attr, src_attr)
       trans[:, idx[wt_attr,;]]  will contain the weights, based on ranks
+      trans[:, idx[src_attr,:]] will contain the weighted returns, plus the sum of the weighted returns
+        trans[:, idx[src_attr, dest_col] ]: simple sum of weighted returns.  Note the weights don't necessary sum up to anything in particular (e.g., neither 100 nor 0)
+        trans[:, idx[src_attr, dest_col + " > 0"] ]: sum of weighted returns, where weights are > 0, divided by sum(weights > 0). This is a true return for an equally weighted long portfolio
+        trans[:, idx[src_attr, dest_col + " < 0"] ]: sum of weighted returns, where weights are < 0, divided by sum(weights < 0). This is a true return for an equally weighted short portfolio
+        trans[:, idx[src_attr, dest_col + " net"] ]: sum of the long and short returns = trans[:, idx[src_attr, dest_col + " > 0"] ] + trans[:, idx[src_attr, dest_col + " < 0"] ]
+          This is the difference between a long portfolio worth 1 and short portfoli worth 1
+
+
+ at trans[:, idx[src_attr, dest_col]]
       trans[:, idx[src_attr,:]] will contain the weighted returns, plus the sum of the weighted returns at trans[:, idx[src_attr, dest_col]]
     
     """
@@ -1103,14 +1115,27 @@ class GenRankToPortRetTransformer(BaseEstimator, TransformerMixin):
         ret_pl = make_pipeline( GenSelectAttrsTransformer( [ src_attr ], dropSingle=True ) )
         ret_df = ret_pl.fit_transform( X )
 
-        # Compute weighted returns
-        wt_ret_df = wt_df * ret_df
+        # Compute number of positively/negatively weighted items
+        pos_cnt_series = (wt_df > 0).sum(axis=1)
+        neg_cnt_series = (wt_df < 0).sum(axis=1)
 
-        # Portfolio return is sum of the weighted returns
-        sum_series = wt_ret_df.sum(axis=1)
+        # Compute weighted returns
+        wt_ret_df  = wt_df * ret_df
+        sum_series =  wt_ret_df.sum(axis=1)
+
+        # NOTE: Number of positively and negatively weighted items may not be the same, so net_ret_series NOT necessarily same as sum_series
+        pos_ret_series = ((wt_df > 0) * wt_ret_df).sum(axis=1)/pos_cnt_series
+        neg_ret_series = ((wt_df < 0) * wt_ret_df).sum(axis=1)/neg_cnt_series
+
+        # Net is addition (since neg_ret_series has negative weights)
+        net_ret_series = pos_ret_series + neg_ret_series
+
 
         # Add the Portfolio Return to the weighted returns df
         wt_ret_df.loc[:, dest_col ] = sum_series
+        wt_ret_df.loc[:, dest_col + " > 0"] = pos_ret_series
+        wt_ret_df.loc[:, dest_col + " < 0"] = neg_ret_series
+        wt_ret_df.loc[:, dest_col + " net"] = net_ret_series
 
         # Return df:
         trans_pl = DataFrameConcat( [ wt_df, wt_ret_df ], df_keys=[ wt_attr, src_attr ] )
@@ -1146,6 +1171,87 @@ class GenRankToPortRetTransformer(BaseEstimator, TransformerMixin):
         wt_df = wt_pl.fit_transform(rank_df)
 
         self.wt_df = wt_df
+        
+        return self
+    
+class GetDataTransformer(BaseEstimator, TransformerMixin):
+    """ 
+    A DataFrame transformer that gets raw data
+    
+    Parameters
+    ----------
+    tickers: list of tickers to get
+    cal_ticker: ticker whose dates will be used as the common "calendar"
+
+    Returns:
+    trans: DataFrame, with index the same as cal_ticker
+
+    
+    """
+    
+    def __init__(self, tickers, cal_ticker=None):
+        # Use GetData to obtain the data
+        gd = GetData()
+        self.gd = gd
+        
+        # Default for tickers are all existing files
+        if not tickers:
+            tickers = gd.existing()
+
+        # Make sure cal_ticker is in tickers
+        if not cal_ticker in tickers:
+            tickers.insert(0, cal_ticker)
+            
+        self.tickers, self.cal_ticker = tickers, cal_ticker
+
+
+    def transform(self, X, **transform_params):
+        """ 
+        Gets the data for all tickers, converts index to DateTime, restricts index to those dates present in cal_ticker
+        
+        Parameters
+        ----------
+        X : pandas DataFrame (ignored)
+            
+        Returns
+        ----------
+        
+        trans : DataFrame
+
+        """
+
+        cal_ticker =self.cal_ticker
+
+        # Pipeline to convert index to DateTime and restrict it to the dates that cal_ticker has data
+        pipe_d = make_pipeline( DatetimeIndexTransformer("Dt"),
+                                RestrictToCalendarColTransformer( ("Adj Close", cal_ticker)),
+                                RestrictToNonNullTransformer("all")
+                                )
+
+        trans = pipe_d.fit_transform( self.df )
+                
+        return trans
+        
+ 
+    def fit(self, X, y=None, **fit_params):
+        """ 
+        Get the data for the tickers in self.tickers
+        
+        Parameters
+        ----------
+        X : pandas DataFrame
+        y : default None
+                
+        
+        Returns
+        ----------
+        self  
+        """
+
+        gd = self.gd
+        df = gd.combine_data( self.tickers )
+
+        self.df = df
         
         return self
     

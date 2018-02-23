@@ -46,7 +46,7 @@ class GetData:
     
     def save_sp500_tickers(self):
         """
-        Get the list of curren tickers in the S&P 500
+        Get the list of current tickers in the S&P 500
 
         The tickers are obtained by scraping a Wikipedia page, using Beautiful Soup
 
@@ -67,6 +67,29 @@ class GetData:
 
         return tickers
 
+    def save_sp400_tickers(self):
+        """
+        Get the list of current tickers in the S&P 400
+
+        The tickers are obtained by scraping a Wikipedia page, using Beautiful Soup
+
+        Returns:
+        list of tickers
+        """
+        
+        resp = requests.get('http://en.wikipedia.org/wiki/List_of_S%26P_400_companies')
+        soup = bs.BeautifulSoup(resp.text, 'lxml')
+        table = soup.find('table', {'class': 'wikitable sortable'})
+        tickers = []
+        for row in table.findAll('tr')[1:]:
+            ticker = row.findAll('td')[0].text
+            tickers.append(ticker)
+
+        with open("sp400tickers.pickle","wb") as f:
+            pickle.dump(tickers,f)
+
+        return tickers
+
     def get_one(self, ticker, start, end):
         """
         Get data from Web for single ticker for date range from start to end
@@ -83,12 +106,14 @@ class GetData:
         """
 
         # Note: the index is of type datetime.  When written to a csv file, it will become a date string
-        succeed, tries = False, 0
+        # Issue: if file has existing data as date, and new data comes in as datetime, can wind up with a mixture of date and datetime when combining, if not careful
         
+        succeed, tries = False, 0
+
+        start_d, end_d = dt.datetime.strftime(start, "%m/%d/%Y"), dt.datetime.strftime(end, "%m/%d/%Y")
         while( (tries < 2) and not succeed):
             try:
                 df = web.DataReader(ticker, "yahoo", start, end)
-                df.index.name = "Date"
 
                 succeed = True
             except Exception as e:
@@ -145,7 +170,7 @@ class GetData:
 
             # Get data for dates following lastd
             start_new = last_dt + oneDayTimeDelta
-            
+
             if (start_new < end):
                 print("Extend {t} from {l} beginning on {sn} to {e}.".format(t=ticker,
                                                                              l =dt.datetime.strftime(last_dt, "%m/%d/%Y"),
@@ -155,8 +180,19 @@ class GetData:
 
                 status, df_newer = self.get_one(ticker, start_new, end)
 
-                if status:
+                # Did get_one really extend df ?
+                # NOTE: the file index are Dates (MM/DD/YYYY), get_one index is DateTime
+
+                if status and df_newer.index.min()  > dup.parse(df.index.max()):
                     changed = True
+
+                    # Convert the index from datetime to date (since file format stores as date)
+                    df_newer.reset_index(inplace=True)
+                    new_dates = df_newer.loc[:, "Date"].map( lambda d_dt: dt.datetime.strftime(d_dt, "%Y-%m-%d") )
+                    df_newer.drop([ "Date"], axis=1)
+                    df_newer["Date"] = new_dates
+                    df_newer.set_index("Date", inplace=True)
+
                     df = pd.concat([df, df_newer], axis=0)
 
         else:
@@ -206,6 +242,50 @@ class GetData:
 
         return changed_tickers
             
+    def clean_data(self, tickers):
+        """
+        Clean up messes in each file:
+        - Remove duplicate rows form each file.
+        - Remove unnamed columns
+
+        Messes will exists ONLY due to bugs and this will clean up
+
+        """
+
+        cleaned = []
+        
+        for ticker in tickers:
+            file = self.file_from_ticker_(ticker)
+            changed = False
+
+            
+            if os.path.exists(file):
+                # Note: the file's Date column is a string, so the index is of type "object"
+                df = pd.read_csv(file)
+
+                # One screw-up: having added duplicate rows
+                df_new = df.drop_duplicates( subset=[ "Date" ])
+
+                if len( df_new.index ) < len (df.index):
+                    print("Removed duplicates from {}.".format(ticker))
+                    changed = True
+
+                # Another screw-up: having added "Unnnamed" columns
+                unnamed = [ c for c in df_new.columns.tolist() if re.search("Unnamed", c) ]
+                if len(unnamed) > 0:
+                    df_new.drop(unnamed, axis=1, inplace=True)
+                    print("Removed unnamed columns for {}.".format(ticker))
+                    changed = True
+
+                if changed:
+                    df_new.to_csv('stock_dfs/{}.csv'.format(ticker))
+
+                    cleaned.append(ticker)
+
+        return cleaned
+
+
+        
     def existing(self):
         """
         Lists the tickers that have data files in self.dir
@@ -247,9 +327,6 @@ class GetData:
 
             dfs.append(df)
 
-            if count % 10 == 0:
-                print(count)
-
         # Combine per-ticker dataframes
         df_big = pd.concat( dfs, axis=1, keys=tickers)
         df_big.index.name = "Date"
@@ -258,6 +335,7 @@ class GetData:
         df_big = df_big.swaplevel(axis=1,i=0,j=1)
 
         # Always a good idea to sort index after concat
+
         df_big.sortlevel(axis=1, inplace=True)
 
         return df_big
@@ -291,7 +369,6 @@ class GetData:
         start = dt.datetime(2000, 1, 1)
         end = dt.datetime(2017, 12, 31)
 
-        tickers = [ "MTUM" ]
         for ticker in tickers:
 
             # just in case your connection breaks, we'd like to save our progress!

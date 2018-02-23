@@ -11,105 +11,68 @@ get_ipython().magic('load_ext autoreload')
 get_ipython().magic('autoreload 1')
 
 
-# In[29]:
+# In[10]:
 
+import pandas as pd
 import os
 import datetime as dt
 from datetime import date
 
 
-# In[26]:
+# In[3]:
 
 get_ipython().magic('aimport trans.data')
 from trans.data import GetData
 
 start = dt.datetime(2000, 1, 1)
-end = dt.datetime(2017, 12, 1)
-
-end2 = dt.datetime(2018, 1, 8)
 
 
-# In[61]:
+# In[4]:
 
 gd = GetData()
 
 
-# In[9]:
-
-sp500_tickers = gd.get_sp500_tickers()
-len(sp500_tickers)
-
-
 # ## Issue: webreader returns index as datetime; writing to csv converts it to object, so when concatenatin the two we get datetime
 
-# In[10]:
-
-df= gd.get_one("MTUM", start, end)
-df.index
-
-df.tail()
-
-
-# In[15]:
-
-changed, dfs = gd.extend("MTUM", start, end2 )
-changed
-
-
-# In[12]:
-
-dfs.tail()
-type(dfs.index)
-
-
-# In[13]:
-
-tickers = [ "MTUM" ]
-file = 'stock_dfs/{}.csv'.format(tickers[0])
-
-if (os.path.exists(file)):
-    print("{} exists before fetch".format(file))
-    
-gd.get_data( tickers, start, end )
-
-if (os.path.exists(file)):
-    print("{} exists after fetch".format(file))
-    
-
-
-# In[14]:
-
-gd.get_data(tickers, start, end2)
-
-
-# In[28]:
+# In[5]:
 
 existing_tickers = gd.existing()
 len(existing_tickers)
 
 
-# In[58]:
+# In[6]:
 
 existing_tickers.sort()
+len(existing_tickers)
 
 
-# In[45]:
+# In[7]:
 
 today = dt.datetime.combine( date.today(), dt.time.min)
 today
 
 
-# In[51]:
+# ## In case we have damaged the files with duplicates: clean them up
 
-dt.datetime.strftime(today, "%m/%d/%Y")
+# In[15]:
+
+from trans.data import GetData
+get_ipython().magic('aimport trans.data')
+gd = GetData()
+cleaned = gd.clean_data( existing_tickers )
 
 
-# In[65]:
+# In[45]:
+
+len(cleaned)
+
+
+# In[14]:
 
 changed_tickers = gd.get_data( existing_tickers, start, today )
 
 
-# In[66]:
+# In[80]:
 
 len(changed_tickers)
 
