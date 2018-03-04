@@ -3,24 +3,32 @@
 
 # http://docs.sqlalchemy.org/en/latest/_modules/examples/performance/bulk_inserts.html
 
-# In[4]:
+# In[1]:
 
 
 from odo import *
 
 
-# In[24]:
+# In[16]:
 
-fname = "/tmp/t.csv"
+fname = "/tmp/a.csv"
 ds = discover( resource(fname) )
 
 
-# In[25]:
+# In[18]:
 
-type(ds)
+ds
 
 
-# In[50]:
+# In[52]:
+
+df = pd.read_csv("/tmp/a.csv")
+df.columns
+df.rename( columns={ "Adj Close": "AdjClose"}, inplace=True)
+df.columns
+
+
+# In[3]:
 
 dburl_table = 'sqlite:////tmp/foo.db::bozo'
 #engine = create_engine()
@@ -36,91 +44,110 @@ t = odo(fname, dburl_table, dshape=ds )
 type(t)
 
 
-# In[45]:
+# In[101]:
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, create_engine, bindparam
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 
 Base = declarative_base()
 
 
-# In[49]:
+# In[5]:
 
 dburl = 'sqlite:////tmp/foo.db'
 
 
-# In[60]:
+# In[102]:
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Date, Float,create_engine, bindparam
 from sqlalchemy.orm import Session
 
 Base = declarative_base()
-engine = create_engine(dburl)
+engine = create_engine(dburl, echo=True)
 
 
 
-# In[61]:
+# In[106]:
 
 class Price(Base):
     __tablename__ = "prices"
-    ticker = Column(String(255), primary_key=True)
-    date   = Column(Date, primary_key=True)
-    adjClose = Column(Float)
-    close   = Column(Float)
-    high    = Column(Float)
-    low     = Column(Float)
-    open    = Column(Float)
-    volume  = Column(Float)
+    Ticker = Column(String(255), primary_key=True)
+    Date   = Column(Date, primary_key=True)
+    AdjClose = Column(Float)
+    Close   = Column(Float)
+    High    = Column(Float)
+    Low     = Column(Float)
+    Open    = Column(Float)
+    Volume  = Column(Float)
     
 
 
-# In[75]:
+# In[77]:
+
+Base.metadata.drop_all(engine)
+Base.metadata.create_all(engine)
 
 
-
-
-# In[92]:
+# In[109]:
 
 session = Session(bind=engine)
 
-def f_clean(f):
-    f = f.replace(" ", "",1)
-    f = f[0].lower() + f[1:]
-    return f
+
+# In[110]:
+
 
 for t in ("a", "b"):
-    with open("/tmp/" + t + ".csv") as fp:
-        print("Reading {}".format(t))
-        first = fp.readline()
-        first = first.rstrip("\n")
+    print("Reading {}".format(t))
+    
+    df = pd.read_csv("/tmp/" + t +  ".csv")
+    df = df.rename( columns={ "Adj Close": "AdjClose"} )
+    
+    df["Date"] = pd.to_datetime( df["Date"])
+    
+    rows = df.to_dict("records")
+   
+    for row in rows:
+        row["Ticker"] = t
+        # print ("Row: {}".format(row))
+        rec= Price(**row)
         
-        cols =  first.split(",")
-        cols = list ( map( lambda f: f_clean(f), cols) )
-       
-        print("Cols: ", "|".join(cols))
-
-        line = fp.readline()
-        while line:
-            line = line.rstrip("\n")
-            fields = line.split(",")
-            
-            d = dict( zip(cols, fields))
-            d["ticker"] = t
-            
-            print("d: {}".format(d))
-            rec = Price(**d)
-            
-            session.add(rec)
-            
-            line=fp.readline()
-            
-    session.flush()
+        session.add(rec)
+ 
+    try:
+        session.flush()
+    except SQLAlchemyError as e:
+        print("Flush error: {}".format(e))
     
 session.commit()
             
                         
+
+
+# In[103]:
+
+rsession = Session(bind=engine)
+
+
+# In[122]:
+
+q = rsession.query(Price)
+for r in q.all():
+    print(r.Ticker, r.Date)
+
+
+# In[111]:
+
+df_r = pd.read_sql(session.query(Price).statement, rsession.bind)
+df_r.head()
+
+
+# In[105]:
+
+df_r_b = pd.read_sql( rsession.query(Price).filter(Price.Ticker== "b").statement, rsession.bind)
+df_r_b.head()
 
 
 # In[8]:

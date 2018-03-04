@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[1]:
+# In[18]:
 
 from IPython.core.interactiveshell import InteractiveShell
 InteractiveShell.ast_node_interactivity = "all"
@@ -11,7 +11,7 @@ get_ipython().magic('load_ext autoreload')
 get_ipython().magic('autoreload 1')
 
 
-# In[2]:
+# In[19]:
 
 import pandas as pd
 idx = pd.IndexSlice
@@ -38,7 +38,7 @@ pctOnlyTrans = GenSelectAttrsTransformer(['Pct'], dropSingle=False )
 
 # ## Get the raw data
 
-# In[3]:
+# In[20]:
 
 get_ipython().magic('aimport trans.data')
 raw_df = gd.combine_data(['FB', 'AAPL', 'AMZN', 
@@ -48,7 +48,7 @@ raw_df.head()
 
 # ## Define featUn transformer: compute Pct and append to Adj Close
 
-# In[4]:
+# In[21]:
 
 pipe_close = make_pipeline(GenSelectAttrsTransformer(['Adj Close'], dropSingle=True )
                       )   
@@ -62,14 +62,14 @@ featUn = GenDataFrameFeatureUnion( [ ("Adj Close", pipe_close),
                                    ] )
 
 
-# In[5]:
+# In[22]:
 
 pipe_pct_only   = make_pipeline(GenSelectAttrsTransformer(['Pct'], dropSingle=False ) ) 
 
 
 # ## Create pipeline to prepare data for regression
 
-# In[6]:
+# In[23]:
 
 pipe_nn = make_pipeline( featUn,
                          DatetimeIndexTransformer("Dt"),
@@ -84,7 +84,7 @@ pct_df.head()
 
 # ## Do a rolling regression on the dataframe with prepared data
 
-# In[7]:
+# In[28]:
 
 ra = Reg(pct_df)
 ma = ra.modelCols( [ idx["Pct", "SPY"]])
@@ -101,7 +101,7 @@ beta_df.tail()
 
 # ## Append the rolling betas to the prepared data
 
-# In[8]:
+# In[9]:
 
 concatTrans = DataFrameConcat( [ pct_df, beta_df ])
 ret_and_beta_df = concatTrans.fit_transform(pd.DataFrame())

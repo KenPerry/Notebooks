@@ -28,7 +28,7 @@ class Reg:
     def fit_mat(self, mat):
         """
         mat is a matrix:
-        - first column is the dependent variable
+        - last column is the dependent variable
         - all other columns are independent variables
     
         """
@@ -48,7 +48,7 @@ class Reg:
         """
         df is a DataFrame
 
-        Regress dependent (first column of df) against all other columnsw, on a rolling bsis
+        Regress dependent (last column of df) against all other columns, on a rolling bsis
 
         Convert df to a matrix and then call fit_mat
         """
@@ -82,12 +82,15 @@ class Reg:
 
     def get(self, indAttrs, depAttr):
         """
-        Return the sub-DataFrame of self.data that only contains columns
+        Return the sub-DataFrame of self.data that only contains columns (in the order listed):
         - indAttrs (independent variables)
         - depAttr  (dependent variable)
         """
         
         attrs = indAttrs +  [ depAttr ]
+        #attrs = indAttrs.copy()
+        #attrs.insert(0, depAttr)
+        print("IndAttrs: {}, depAttr {}, attrs {}".format(indAttrs, depAttr, attrs))
         data  = self.data
     
         return data.loc[:, attrs ]
@@ -102,7 +105,7 @@ class Reg:
         start, end are datetimes
         windowTimeDelta is a timedelta
 
-        Regress dependent (first column of df) against all other columnsw, on a rolling basis:
+        Regress dependent (last column of df) against all other columns, on a rolling basis:
         All windows of length windowTimeDelta.  The last window ends on end; each previous window ends windowTimeDelta prior
         """
         
