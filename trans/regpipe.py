@@ -1,40 +1,27 @@
 import pandas as pd
 import numpy as np
 
-from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import Pipeline, make_pipeline
 from datetime import timedelta
 
 import re
 
-
-from trans.gtrans import DataFrameConcat
+from trans.gtrans import *
+from trans.reg import Reg, RegAttr
 
 idx = pd.IndexSlice
 
 class RegPipe:
     """
-    TO DO:
-    reg.sensAttrs:  
-       assumes data in self.data; make it take df as arg ?
-       assumes betas in same df as data, that's why sensAttrs needs to serve
 
-    depTickersFromSensAttrs(sensAttrs ):
-       assumes data in self.data; make it take df as arg ?
-          that's why needs to search for non-sens as dependent
-
-    reg.retAttrib:
-       assumes sensitivities, indVars and depVars are all in same df
-        reg is ret_and_rolled_beta_df
-
-
-    - 
     """
     
-    def __init(self, df, debug=False):
-        self.df = df
+    def __init__(self, df, debug=False):
+        self.df = df.copy()
         self.debug = debug
 
         self.reg = Reg(df)
+        self.regAttr = RegAttr(df)
 
 
     def indCol(self, col):
@@ -53,7 +40,7 @@ class RegPipe:
         reg = self.reg
         indCol = self.indCol
         
-        ma = .modelCols( [ indCol ])
+        ma = reg.modelCols( [ indCol ])
 
         beta_df = reg.rollingModelAll( *ma, 
                                        start, end,
@@ -62,18 +49,38 @@ class RegPipe:
 
         self.beta_df = beta_df
 
+
+    def indexUnionBeta(self, freq_index):
+        """
+        Re-shapes self.beta_df
+
+        The modified self.beta_df index is the UNION of the original index f self.beta_df and the index freq_index
+        It DIFFERS from pd.reindex(freq_index) as follows:
+        - we get the UNION of the dates in the original and in freq_index
+        - pd.reindex(foo) will create a DataFrame whose index is exactly foo
+        """
+        
+        beta_df = self.beta_df
+
+        # Create an empty DataFrame with the index freq_index
+        empty_df = pd.DataFrame(index=freq_index)
+
+        # Join beta_df with the empty dataframe, resulting in an index that is the union of the indices of the two constituents
+        beta_df = pd.concat( [beta_df, empty_df], axis=1)
+        
+        self.beta_df = beta_df
+        
+    def rollBeta(self, periods, fill_method):
+        """
+        fill_method: {"ffill", "bfill"}
+        - ffill: forward fill
+        - bfill: backwards fill
+        """
  
-    def rollBeta(self):
-        beta_df = self.beta-df
+        beta_df = self.beta_df
 
-        # To DO: Only need betaAttrs = ..; and GenSelectAttrsTransformer(betaAttrs) IF df contains something OTHER than betas, but beta_df ONLY contains betas
-        rab = Reg(beta_df)
-        betaAttrs = rab.sensAttrs('^Beta \d+$')
-
-        beta_r_pl = make_pipeline( GenSelectAttrsTransformer(betaAttrs),
-                                   ShiftTransformer(1),
-                                   FillNullTransformer(method="ffill"),
-                                   GenRenameAttrsTransformer(lambda col: col + ' rolled fwd', level=0)
+        beta_r_pl = make_pipeline( ShiftTransformer(periods),
+                                   FillNullTransformer(method=fill_method),
                          )
         
         beta_rolled_df = beta_r_pl.fit_transform(beta_df)
@@ -82,18 +89,27 @@ class RegPipe:
         
 
     def attrib(self):
+        reg = self.reg
+        regAttr = self.regAttr
+        
+        df  = reg.data
+
+        beta_df = self.beta_rolled_df
+
+    
         indCols = [ ("Pct", "1"), self.indCol ]
 
-        # TO DO: only need attrib.sensAttrs IF df contains something OTHER than rolled betas
-        sensAttrs = attrib.sensAttrs('^Beta \d+ rolled fwd$')
+        sensAttrs = beta_df.columns.get_level_values(0).unique().tolist()
 
-        depTickers = attrib.depTickersFromSensAttrs(sensAttrs )
+        regAttr.setSens(beta_df)
+
+        depTickers = regAttr.depTickersFromSensAttrs(sensAttrs )
         depCols = [ ("Pct", t) for t in depTickers ]
 
-        attrib.addConst(("Pct", "1"), 1)
+        regAttr.addConst(("Pct", "1"), 1)
 
         # TO DO: assumes the df in reg contains both dependents/independents (indCols, depCols) AND sensitivities in same df
-        retAttr_df =reg.retAttrib(
+        retAttr_df =regAttr.retAttrib(
             indCols,
             depCols, 
             sensAttrs)

@@ -80,21 +80,29 @@ class Reg:
         return self.fit_mat(mat)
 
 
-    def get(self, indAttrs, depAttr):
+    def get(self, indCols, depCol):
         """
         Return the sub-DataFrame of self.data that only contains columns (in the order listed):
-        - indAttrs (independent variables)
-        - depAttr  (dependent variable)
+        - indCols (independent variables)
+        - depCol  (dependent variable)
         """
         
-        attrs = indAttrs +  [ depAttr ]
-        #attrs = indAttrs.copy()
-        #attrs.insert(0, depAttr)
-        print("IndAttrs: {}, depAttr {}, attrs {}".format(indAttrs, depAttr, attrs))
+        cols = indCols +  [ depCol ]
+        print("IndCols: {}, depCol {}, cols {}".format(indCols, depCol, cols))
         data  = self.data
     
-        return data.loc[:, attrs ]
+        return data.loc[:, cols ]
 
+    def sensAttrsDef(self, numBetas):
+        """
+        Return list of attributes that will store the sensitivities
+
+        numBetas: The number of sensitivities. It is the number of independents (plus one, if there is an interecept)
+        """
+
+        # Intercept is an additional sensitivity attribute (attribute 0_
+        attrs = [ "Beta {:d}".format(i)  for i in range(0,numBetas) ]
+        return attrs
     
     def rollingFit(self, df, start, end, windowTimeDelta):
         """
@@ -111,8 +119,11 @@ class Reg:
         
         results = []
 
-        numBetas = df.shape[-1] -1
-        colNames = [ "Dt" ] + [ "Beta {:d}".format(i)  for i in range(0,numBetas +1) ]
+        numInds = df.shape[-1] -1
+
+        # Interecept is an additional beta
+        numBetas = numInds + 1
+        colNames = [ "Dt" ] + self.sensAttrsDef(numBetas)
         
         firstDate = self.data.index[0]
         
@@ -142,43 +153,43 @@ class Reg:
 
         return result_df
 
-    def rollingModel(self, indAttrs, depAttr, start, end, windowTimeDelta):
+    def rollingModel(self, indCols, depCol, start, end, windowTimeDelta):
         """
         Rolling regression
 
-        indAttrs are the independent variables
-        depAttr is the dependent variables
+        indCols are the independent variables
+        depCol is the dependent variables
 
         start, end, windowTimeDelta are as in rollingFit
         """
         
-        df = self.get(indAttrs, depAttr)
+        df = self.get(indCols, depCol)
         result = self.rollingFit(df, start, end, windowTimeDelta)
 
         return result
 
-    def rollingModelAll(self, indAttrs, depAttrs, start, end, windowTimeDelta):
+    def rollingModelAll(self, indCols, depCols, start, end, windowTimeDelta):
         """
         Rolling regression, repeated separately with each non-dependent variable in self.data as the dependent
 
-        indAttrs, depAttrs, start, end, windowTimeDelta are as in rollingModel
+        indCols, depCols, start, end, windowTimeDelta are as in rollingModel
         """
         
         result = []
 
-        # Perform rollingModel for each ticker in depAttrs. Create list of Dataframes, one per ticker
-        for depAttr in depAttrs:
+        # Perform rollingModel for each ticker in depCols. Create list of Dataframes, one per ticker
+        for depCol in depCols:
             if self.Debug:
-                print("rollingModel for {t}".format(t=depAttr) )
+                print("rollingModel for {t}".format(t=depCol) )
             
-            thisResult = self.rollingModel(indAttrs, depAttr, start, end, windowTimeDelta)
+            thisResult = self.rollingModel(indCols, depCol, start, end, windowTimeDelta)
             result.append( thisResult )
 
 
         # Join the per-ticker Dataframes into one big Dataframe
         df_big  = pd.DataFrame
         if (len(result) > 0):
-            depTickers = [ a[-1] for a in depAttrs ]
+            depTickers = [ a[-1] for a in depCols ]
             df_big = pd.concat( result, axis=1, keys=depTickers)
             
             # Make the first level column index be attribute; the second will be ticker
@@ -215,7 +226,10 @@ class Reg:
 
         return ( indAttrs, tickers)
 
-
+class RegAttr:
+    def __init__(self, data):
+        self.data = data
+    
     def addConst(self, colName, val):
         """
         Add a column to DataFrame df, with name colName, and the constant value val
@@ -223,6 +237,7 @@ class Reg:
         colName is a column name
         val is a value
         """
+        print("addConst")
         df = self.data
         df[colName] = val
 
@@ -235,10 +250,13 @@ class Reg:
         sensAttrs is a list of sensitivity attributes
         """
 
-        df = self.data
-        depTickers = df.loc[:, idx[ sensAttrs[0] ] ].columns.tolist()
+        beta_df = self.beta_df
+        depTickers = beta_df.loc[:, idx[ sensAttrs[0] ] ].columns.tolist()
         return depTickers
 
+    def setSens(self, df):
+        self.beta_df = df
+        
     def sensAttrs(self, pat):
         """
         Return a list of the attributes of the sensitivities
@@ -247,8 +265,9 @@ class Reg:
         pat is a pattern
         """
 
-        df = self.data
-        attrs = df.columns.get_level_values(0).unique().tolist()
+        # df = self.data
+        beta_df = self.beta_df
+        attrs = beta_df.columns.get_level_values(0).unique().tolist()
         sensAttrs = [ attr for attr in attrs if re.search(pat, attr) ]
 
         return sensAttrs
@@ -262,12 +281,14 @@ class Reg:
         """
 
         df = self.data
+        beta_df = self.beta_df
+        
         df_dep = df.loc[:, depCols]
 
         list_of_sens_dfs = []
         
         for sensAttr in sensAttrs:
-            df_sens = df.loc[:, idx[sensAttr,:] ]
+            df_sens = beta_df.loc[:, idx[sensAttr,:] ]
             list_of_sens_dfs.append( df_sens )
 
 
@@ -334,9 +355,16 @@ class Reg:
         - contribution from each independent
         - the total, across all independents,  contribution
         - the residual (difference between dependent and total contribution from independents
+
+        Pre-requisites:
+        self.data: Dataframe containing the dependent and indendent variables
+        - this must have the columns named in the parameters: depCols, indCols
+        self.beta_df: Dataframe containing the sensitivites.
+        - this must have the attributes named in the parameter: sensAttrs
         """
 
         df = self.data
+        beta_df = self.beta_df
         
         # Get the tickers of the dependent variable
         #  These are tickers that have sensitivity to the attributes in sensAttrs

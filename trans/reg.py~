@@ -28,7 +28,7 @@ class Reg:
     def fit_mat(self, mat):
         """
         mat is a matrix:
-        - first column is the dependent variable
+        - last column is the dependent variable
         - all other columns are independent variables
     
         """
@@ -48,7 +48,7 @@ class Reg:
         """
         df is a DataFrame
 
-        Regress dependent (first column of df) against all other columnsw, on a rolling bsis
+        Regress dependent (last column of df) against all other columns, on a rolling bsis
 
         Convert df to a matrix and then call fit_mat
         """
@@ -80,18 +80,29 @@ class Reg:
         return self.fit_mat(mat)
 
 
-    def get(self, indAttrs, depAttr):
+    def get(self, indCols, depCol):
         """
-        Return the sub-DataFrame of self.data that only contains columns
-        - indAttrs (independent variables)
-        - depAttr  (dependent variable)
+        Return the sub-DataFrame of self.data that only contains columns (in the order listed):
+        - indCols (independent variables)
+        - depCol  (dependent variable)
         """
         
-        attrs = indAttrs +  [ depAttr ]
+        cols = indCols +  [ depCol ]
+        print("IndCols: {}, depCol {}, cols {}".format(indCols, depCol, cols))
         data  = self.data
     
-        return data.loc[:, attrs ]
+        return data.loc[:, cols ]
 
+    def sensAttrsDef(self, numBetas):
+        """
+        Return list of attributes that will store the sensitivities
+
+        numBetas: The number of sensitivities. It is the number of independents (plus one, if there is an interecept)
+        """
+
+        # Intercept is an additional sensitivity attribute (attribute 0_
+        attrs = [ "Beta {:d}".format(i)  for i in range(0,numBetas) ]
+        return attrs
     
     def rollingFit(self, df, start, end, windowTimeDelta):
         """
@@ -102,14 +113,17 @@ class Reg:
         start, end are datetimes
         windowTimeDelta is a timedelta
 
-        Regress dependent (first column of df) against all other columnsw, on a rolling basis:
+        Regress dependent (last column of df) against all other columns, on a rolling basis:
         All windows of length windowTimeDelta.  The last window ends on end; each previous window ends windowTimeDelta prior
         """
         
         results = []
 
-        numBetas = df.shape[-1] -1
-        colNames = [ "Dt" ] + [ "Beta {:d}".format(i)  for i in range(0,numBetas +1) ]
+        numInds = df.shape[-1] -1
+
+        # Interecept is an additional beta
+        numBetas = numInds + 1
+        colNames = [ "Dt" ] + self.sensAttrsDef(numBetas)
         
         firstDate = self.data.index[0]
         
@@ -118,7 +132,7 @@ class Reg:
         (e,s)  = (end, end - windowTimeDelta + oneDayTimeDelta)
 
         while (s >= start):
-            # thisMat = np.asarray( df.loc[s:e,:] )
+            # NOTE: s,e are DateTimes so s:e are all the rows INCLUSIVE of e (as opposed to if s,e were integers, in which case last row is (e-1)
             thisDf = df.loc[s:e,:]
 
             if self.Debug:
@@ -139,43 +153,43 @@ class Reg:
 
         return result_df
 
-    def rollingModel(self, indAttrs, depAttr, start, end, windowTimeDelta):
+    def rollingModel(self, indCols, depCol, start, end, windowTimeDelta):
         """
         Rolling regression
 
-        indAttrs are the independent variables
-        depAttr is the dependent variables
+        indCols are the independent variables
+        depCol is the dependent variables
 
         start, end, windowTimeDelta are as in rollingFit
         """
         
-        df = self.get(indAttrs, depAttr)
+        df = self.get(indCols, depCol)
         result = self.rollingFit(df, start, end, windowTimeDelta)
 
         return result
 
-    def rollingModelAll(self, indAttrs, depAttrs, start, end, windowTimeDelta):
+    def rollingModelAll(self, indCols, depCols, start, end, windowTimeDelta):
         """
         Rolling regression, repeated separately with each non-dependent variable in self.data as the dependent
 
-        indAttrs, depAttrs, start, end, windowTimeDelta are as in rollingModel
+        indCols, depCols, start, end, windowTimeDelta are as in rollingModel
         """
         
         result = []
 
-        # Perform rollingModel for each ticker in depAttrs. Create list of Dataframes, one per ticker
-        for depAttr in depAttrs:
+        # Perform rollingModel for each ticker in depCols. Create list of Dataframes, one per ticker
+        for depCol in depCols:
             if self.Debug:
-                print("rollingModel for {t}".format(t=depAttr) )
+                print("rollingModel for {t}".format(t=depCol) )
             
-            thisResult = self.rollingModel(indAttrs, depAttr, start, end, windowTimeDelta)
+            thisResult = self.rollingModel(indCols, depCol, start, end, windowTimeDelta)
             result.append( thisResult )
 
 
         # Join the per-ticker Dataframes into one big Dataframe
         df_big  = pd.DataFrame
         if (len(result) > 0):
-            depTickers = [ a[-1] for a in depAttrs ]
+            depTickers = [ a[-1] for a in depCols ]
             df_big = pd.concat( result, axis=1, keys=depTickers)
             
             # Make the first level column index be attribute; the second will be ticker
@@ -232,8 +246,8 @@ class Reg:
         sensAttrs is a list of sensitivity attributes
         """
 
-        df = self.data
-        depTickers = df.loc[:, idx[ sensAttrs[0] ] ].columns.tolist()
+        beta_df = self.data
+        depTickers = beta_df.loc[:, idx[ sensAttrs[0] ] ].columns.tolist()
         return depTickers
 
     def sensAttrs(self, pat):
@@ -379,4 +393,3 @@ class Reg:
 
         return regRes_df
     
-

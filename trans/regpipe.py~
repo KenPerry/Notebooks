@@ -1,13 +1,13 @@
 import pandas as pd
 import numpy as np
 
-from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import Pipeline, make_pipeline
 from datetime import timedelta
 
 import re
 
-
-from trans.gtrans import DataFrameConcat
+from trans.gtrans import *
+from trans.reg import Reg
 
 idx = pd.IndexSlice
 
@@ -24,11 +24,13 @@ class RegPipe:
 
     reg.retAttrib:
        assumes sensitivities, indVars and depVars are all in same df
+        reg is ret_and_rolled_beta_df
+
 
     - 
     """
     
-    def __init(self, df, debug=False):
+    def __init__(self, df, debug=False):
         self.df = df
         self.debug = debug
 
@@ -51,7 +53,7 @@ class RegPipe:
         reg = self.reg
         indCol = self.indCol
         
-        ma = .modelCols( [ indCol ])
+        ma = reg.modelCols( [ indCol ])
 
         beta_df = reg.rollingModelAll( *ma, 
                                        start, end,
@@ -60,22 +62,14 @@ class RegPipe:
 
         self.beta_df = beta_df
 
-    def attrib_setup(self):
-        beta_df = self.beta_df
-        attrib = Reg( beta_df.copy() )
-
-        self.attrib = attrib
-
+ 
     def rollBeta(self):
-        beta_df = self.beta-df
-        
-        rab = Reg(beta_df)
-        betaAttrs = rab.sensAttrs('^Beta \d+$')
+        beta_df = self.beta_df
 
-        beta_r_pl = make_pipeline( GenSelectAttrsTransformer(betaAttrs),
-                                   ShiftTransformer(1),
+        rab = Reg(beta_df)
+
+        beta_r_pl = make_pipeline( ShiftTransformer(1),
                                    FillNullTransformer(method="ffill"),
-                                   GenRenameAttrsTransformer(lambda col: col + ' rolled fwd', level=0)
                          )
         
         beta_rolled_df = beta_r_pl.fit_transform(beta_df)
@@ -84,15 +78,24 @@ class RegPipe:
         
 
     def attrib(self):
+        reg = self.reg
+        df  = reg.data
+
+        beta_df = self.beta_rolled_df
+
+    
         indCols = [ ("Pct", "1"), self.indCol ]
 
-        sensAttrs = attrib.sensAttrs('^Beta \d+ rolled fwd$')
+        sensAttrs = beta_df.columns.get_level_values(0).unique().tolist()
 
-        depTickers = attrib.depTickersFromSensAttrs(sensAttrs )
+        regBeta = Reg(beta_df)
+
+        depTickers = regBeta.depTickersFromSensAttrs(sensAttrs )
         depCols = [ ("Pct", t) for t in depTickers ]
 
-        attrib.addConst(("Pct", "1"), 1)
+        reg.addConst(("Pct", "1"), 1)
 
+        # TO DO: assumes the df in reg contains both dependents/independents (indCols, depCols) AND sensitivities in same df
         retAttr_df =reg.retAttrib(
             indCols,
             depCols, 
