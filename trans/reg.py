@@ -3,6 +3,9 @@ import numpy as np
 
 from sklearn.linear_model import LinearRegression
 from datetime import timedelta
+import dateutil.relativedelta as rd
+
+nullTimeDelta = rd.relativedelta(days=0)
 
 import re
 
@@ -21,6 +24,11 @@ For a MultiIndex column with two levels: L1, L2
 
 class Reg:
     def __init__(self, data, debug=False):
+        """
+        data: DataFrame containing indendent and dependent variables
+        - last column is the dependent; all others are independent
+        """
+        
         self.data = data
         self.Debug = debug
 
@@ -104,19 +112,28 @@ class Reg:
         attrs = [ "Beta {:d}".format(i)  for i in range(0,numBetas) ]
         return attrs
     
-    def rollingFit(self, df, start, end, windowTimeDelta):
+    def rollingFit(self, df, start, end, windowTimeDelta, stepTimeDelta=nullTimeDelta):
         """
 
-        Rolling regression of a single dependent
+        Rolling regression of a single dependent.  That is, a fit is performed on multiple dates.
+
+        - the dates for fitting end (inclusive) at (e- i * stepTimeDelta) for i=0, ...
+        - fitting for end date e includes data df.loc[e- windowTimeDleta + oneDayTimeDelta: e,:].  Since e is a datetime, date e IS included.
 
         df is a DataFrame
         start, end are datetimes
-        windowTimeDelta is a timedelta
+        windowTimeDelta is a timedelta.  It is the length of the window for fitting.
+        stepTimeDelta   is a timedelta.  It is the interval at which successive fittings are done.
 
         Regress dependent (last column of df) against all other columns, on a rolling basis:
         All windows of length windowTimeDelta.  The last window ends on end; each previous window ends windowTimeDelta prior
         """
-        
+
+        if (stepTimeDelta == nullTimeDelta):
+            stepTimeDelta = windowTimeDelta
+            if self.Debug:
+                print("rollingFit: step size set to window size")
+            
         results = []
 
         numInds = df.shape[-1] -1
@@ -128,7 +145,8 @@ class Reg:
         firstDate = self.data.index[0]
         
         oneDayTimeDelta = timedelta(days=1)
-        
+
+        # End e (inclusive) and start s for first fit
         (e,s)  = (end, end - windowTimeDelta + oneDayTimeDelta)
 
         while (s >= start):
@@ -142,7 +160,7 @@ class Reg:
 
             results.append( (e, intercept, *betas) )
 
-            e = e - windowTimeDelta
+            e = e - stepTimeDelta
             s = e - windowTimeDelta + oneDayTimeDelta
 
 
@@ -153,7 +171,7 @@ class Reg:
 
         return result_df
 
-    def rollingModel(self, indCols, depCol, start, end, windowTimeDelta):
+    def rollingModel(self, indCols, depCol, start, end, windowTimeDelta, stepTimeDelta=nullTimeDelta):
         """
         Rolling regression
 
@@ -164,11 +182,11 @@ class Reg:
         """
         
         df = self.get(indCols, depCol)
-        result = self.rollingFit(df, start, end, windowTimeDelta)
+        result = self.rollingFit(df, start, end, windowTimeDelta, stepTimeDelta)
 
         return result
 
-    def rollingModelAll(self, indCols, depCols, start, end, windowTimeDelta):
+    def rollingModelAll(self, indCols, depCols, start, end, windowTimeDelta, stepTimeDelta=nullTimeDelta):
         """
         Rolling regression, repeated separately with each non-dependent variable in self.data as the dependent
 
@@ -182,7 +200,7 @@ class Reg:
             if self.Debug:
                 print("rollingModel for {t}".format(t=depCol) )
             
-            thisResult = self.rollingModel(indCols, depCol, start, end, windowTimeDelta)
+            thisResult = self.rollingModel(indCols, depCol, start, end, windowTimeDelta, stepTimeDelta)
             result.append( thisResult )
 
 
@@ -202,12 +220,12 @@ class Reg:
 
         return df_big
 
-    def modelCols(self, indAttrs):
+    def modelCols(self, indCols):
         """"
-        indAttrs is an array of independent variable columns (even length 1 must be array)
+        indCols is an array of independent variable columns (even length 1 must be array)
 
         Returns 
-        - a pair ( (all non-dependent variables of self.data), dependent variable columns of self.data )
+        - a pair ( ( independent variable columns  of self.data), dependent variable columns of self.data )
         """
         
         df = self.data
@@ -215,16 +233,16 @@ class Reg:
         # Get Index with column names
         if isinstance( df.columns, pd.MultiIndex):
             columns = df.columns
-            tickers = list( zip( columns.get_level_values(0), columns.get_level_values(1) ) )
+            depCols = list( zip( columns.get_level_values(0), columns.get_level_values(1) ) )
         else:
-            tickers = df.columns
+            depCols = df.columns
 
         # Remove independents
-        for t in indAttrs:
-            if t in tickers:
-                tickers.remove(t)
+        for t in indCols:
+            if t in depCols:
+                depCols.remove(t)
 
-        return ( indAttrs, tickers)
+        return (indCols, depCols)
 
 class RegAttr:
     def __init__(self, data):
@@ -244,7 +262,7 @@ class RegAttr:
         
     def depTickersFromSensAttrs(self, sensAttrs):
         """
-        Return a list of tickers of the dependent variables of df.
+        Return a list of tickers (level 1 of column names) of the dependent variables of df.
         These are determined by which tickers have sensitivities in the first sensitivity attribute
 
         sensAttrs is a list of sensitivity attributes
@@ -254,7 +272,12 @@ class RegAttr:
         depTickers = beta_df.loc[:, idx[ sensAttrs[0] ] ].columns.tolist()
         return depTickers
 
+    
     def setSens(self, df):
+        """ TO DO:
+        Turn into inspector too !
+        """
+        
         self.beta_df = df
         
     def sensAttrs(self, pat):
@@ -265,7 +288,6 @@ class RegAttr:
         pat is a pattern
         """
 
-        # df = self.data
         beta_df = self.beta_df
         attrs = beta_df.columns.get_level_values(0).unique().tolist()
         sensAttrs = [ attr for attr in attrs if re.search(pat, attr) ]
@@ -343,12 +365,14 @@ class RegAttr:
         return(list_of_contribs_dfs, predict_df, err_df)
     
                                 
-    def retAttrib(self, indCols, depCols, sensAttrs):
+    def retAttrib(self, indCols, depCols, sensAttrs=[]):
         """
         Perform the return attribution:
         - indCols: names of columns of self.data holding independent variables
         - depCols: names of columns with the dependent variable (there are separate regressions per dependent, so mulitple dependents)
-        - sensAttrs:names of attributes (not columns) of the sensitvities (betas) of dependent to independents
+        - sensAttrs: (optional) names of attributes (not columns) of the sensitivities (betas) of dependent to independents
+            should rarely need to specify; it defaults to the attribute names of self.beta_df.  Only need to specify is self.beta_df has extraneous non-sensitivity attributes
+
 
         Returns:
         dataframe with attributes for:
@@ -365,7 +389,11 @@ class RegAttr:
 
         df = self.data
         beta_df = self.beta_df
-        
+
+        # sensAttrs:names of attributes (not columns) of the sensitivities (betas) of dependent to independents
+        if (len(sensAttrs) == 0):
+            sensAttrs = beta_df.columns.get_level_values(0).unique().tolist()
+
         # Get the tickers of the dependent variable
         #  These are tickers that have sensitivity to the attributes in sensAttrs
         depTickers = self.depTickersFromSensAttrs(sensAttrs )

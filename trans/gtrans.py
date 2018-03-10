@@ -14,6 +14,38 @@ from trans.data import GetData
 
 idx = pd.IndexSlice
 
+"""
+Common patterns:
+
+- Get wide DataFrame with raw data for multiple tickers:
+   price_df = GetDataTransformer(sector_tickers, cal_ticker="SPY").fit_transform( pd.DataFrame())
+
+- Convert price DataFrame to returns DataFrame
+   pct_df   = make_pipeline(GenSelectAttrsTransformer(['Adj Close'], dropSingle=False),
+                            # DatetimeIndexTransformer("Dt")
+                            # RestrictToCalendarColTransformer( ("Adj Close", "SPY") ),
+                            pctTrans,
+                            GenRenameAttrsTransformer(lambda col: "Pct", level=0)
+                          ).fit_transform(price_df)
+
+   price_df obtained from GetDataTransformer;
+   - index is already DateTime so no need for DatetimeIndexTransformer("Dt")
+   - common cal_ticker, so no need for RestrictToCalendarColTransformer
+   - renames "Adj Close" attribute to "Pct"
+
+- Convert price DataFrame to returns DataFrame (alternate method):
+   pct_df   = make_pipeline(GenSelectAttrsTransformer(['Adj Close'], dropSingle=True), 
+                            # RestrictToCalendarColTransformer( "SPY" ),
+                            pctTrans,
+                            # DatetimeIndexTransformer("Dt"),
+                            # RestrictToNonNullTransformer("all"),
+                            AddAttrTransformer('Pct')
+                          ).fit_transform(price_df)
+
+   like the above, but first drops the MultiIndex, only to add an attribute (level) at end via AddAttrTransformer
+
+"""
+
 class SelectColumnsTransformer(BaseEstimator, TransformerMixin):
     """ A DataFrame transformer that provides column selection
     
@@ -357,7 +389,9 @@ class GenRenameAttrsTransformer(BaseEstimator, TransformerMixin):
     
     Parameters
     ----------
-    None
+    func: function to map name of existing attribute to new attribute name
+    **init_params: additional arguments to pandas.set_levels or pandas.rename, e.g., level=0
+
     
     """
     def __init__(self, func, **init_params):
@@ -1176,7 +1210,7 @@ class GenRankToPortRetTransformer(BaseEstimator, TransformerMixin):
     
 class GetDataTransformer(BaseEstimator, TransformerMixin):
     """ 
-    A DataFrame transformer that gets raw data
+    A DataFrame transformer that gets raw data (from files) of multiple tickers, and assembles into a wide DataFrame
     
     Parameters
     ----------
@@ -1184,8 +1218,12 @@ class GetDataTransformer(BaseEstimator, TransformerMixin):
     cal_ticker: ticker whose dates will be used as the common "calendar"
 
     Returns:
-    trans: DataFrame, with index the same as cal_ticker
-
+    trans: DataFrame, with index the same as cal_ticker (i.e., cal_ticker's index is used as the common index -- the "calendar")
+    - trans.index   will be of type index.DateTimeIndex and named "Dt"
+    - trans.columns will be a MultiIndex.
+    -- the attributes will be the headers within the files
+    -- the second level will be the tickers
+    -- rows that are all null will be elimnated (n.b., should be no such rows since the cal_ticker column should never be empty ?)
     
     """
     

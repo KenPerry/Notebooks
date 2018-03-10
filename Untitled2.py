@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[161]:
+# In[1]:
 
 from IPython.core.interactiveshell import InteractiveShell
 InteractiveShell.ast_node_interactivity = "all"
@@ -11,187 +11,124 @@ get_ipython().magic('load_ext autoreload')
 get_ipython().magic('autoreload 1')
 
 
-# In[162]:
+# In[16]:
 
 import pandas as pd
 idx = pd.IndexSlice
 
-from sklearn.pipeline import Pipeline, make_pipeline
-from sklearn.linear_model import LinearRegression
-
+import datetime as dt
+from datetime import date
 from datetime import timedelta
-
-s = '2017-11-01'
-e = '2017-12-20'
+import dateutil.parser as dup
 
 get_ipython().magic('aimport trans.data')
 get_ipython().magic('aimport trans.gtrans')
 get_ipython().magic('aimport trans.reg')
+get_ipython().magic('aimport trans.regpipe')
 
-from trans.data import GetData as gd
+from trans.data import GetData
+gd = GetData()
 from trans.gtrans import *
+from trans.reg import Reg, RegAttr
+from trans.regpipe import RegPipe
 
-from trans.reg import Reg
 
-from trans.gtrans import DataFrameFunctionTransformer 
 
-pctTrans = DataFrameFunctionTransformer(func = lambda s: s.pct_change())
-rankTrans = DataFrameFunctionTransformer(func = lambda s: s.rank(method="first"), axis=1)
-pctOnlyTrans = GenSelectAttrsTransformer(['Pct'], dropSingle=False )
+# In[19]:
 
+today = dt.datetime.combine( date.today(), dt.time.min)
+today
 
-# In[163]:
+start = dup.parse("01/01/2000")
+start
 
-ret_df = gd.load_data("ret_df.pkl")
-beta_df = gd.load_data("beta_df.pkl")
-ret_and_beta_df = gd.load_data("ret_and_beta_df.pkl")
 
+# In[20]:
 
-# In[164]:
+gd = GetData()
+univ = gd.existing()
+univ.sort()
 
-cols = beta_df.columns.get_level_values(0).unique().tolist()
-betaCols = [ c for c in cols if re.search('^Beta', c) ]
+len(univ)
 
-betaCols
 
+# In[21]:
 
-# In[165]:
+sectors =  { 
+    "Consumer Discretionary": "XLY",
+    "Consumer Staples": "XLP",
+    "Energy": "XLE",
+    "Financial": "XLF",
+    "Health": "XLV",
+    "Industrial": "XLI", 
+    "Materials" : "XLB",
+    "Real Estate": "XLRE",
+    "Technology": "XLK", 
+    "Telecom": "XTL",
+    "Utilities": "XLU"
+}
+   
 
-beta_r_pl = make_pipeline( GenSelectAttrsTransformer(betaCols),
-                            FillNullTransformer(method="ffill"),
-                            GenRenameAttrsTransformer(lambda col: col + ' rolled fwd', level=0)
-                         )
-beta_rolled_df = beta_r_pl.fit_transform(ret_and_beta_df)
-beta_rolled_df.tail()
 
+# In[22]:
 
-# In[166]:
+sector_tickers = list( sectors.values() )
 
-ret_and_beta_df.shape
-beta_rolled_df.shape
 
-ret_and_rolled_beta_pl = DataFrameConcat( [ ret_and_beta_df, beta_rolled_df])
-ret_and_rolled_beta_df = ret_and_rolled_beta_pl.fit_transform( pd.DataFrame() )
-ret_and_rolled_beta_df.tail()
+# In[28]:
 
+changed_tickers = gd.get_data( sector_tickers, start, today )
 
-# In[167]:
 
-reg = Reg(ret_and_rolled_beta_df)
-reg.addConst(ret_and_rolled_beta_df,("Pct", "1"), 1)
+# In[29]:
 
+len(sector_tickers)
+len(changed_tickers)
+list( set(sector_tickers) - set(changed_tickers))
 
-# In[168]:
 
-gd.save_data(ret_and_rolled_beta_df, "ret_and_rolled_beta_df.pkl")
+# In[30]:
 
+price_df = GetDataTransformer(sector_tickers, cal_ticker="SPY").fit_transform( pd.DataFrame())
+price_df.shape
 
-# In[169]:
 
-sensAttrs = reg.sensAttrs(ret_and_rolled_beta_df, '^Beta \d+ rolled fwd$')
-sensAttrs
+# In[ ]:
 
-depTickers = reg.depTickersFromSensAttrs(ret_and_rolled_beta_df, sensAttrs )
-depTickers
-depCols = [ ("Pct", t) for t in depTickers ]
-depCols
+get_ipython().magic('aimport trans.data')
+raw_df = gd.combine_data(['FB', 'AAPL', 'AMZN', 
+                           'NFLX', 'GOOG', 'SPY'])
+raw_df.head()
 
-indCols = [ ("Pct", "1"), ("Pct", "SPY")]
-indCols
 
+# In[ ]:
 
-# In[170]:
 
-(df_dep, list_of_ind_dfs, list_of_sens_dfs) = reg.retAttrib_setup(ret_and_rolled_beta_df, 
-                                                                 indCols,
-                                                                 depCols, 
-                                                                 sensAttrs)
 
 
-# In[171]:
+# In[ ]:
 
-get_ipython().magic('aimport trans.reg')
-from trans.reg import *
-r = reg.retAttrib_to_np(list_of_ind_dfs, df_dep, list_of_sens_dfs)
-(indMat, depMat, sensMat) = r
 
 
-# In[172]:
 
-depMat.shape
-indMat.shape
-sensMat.shape
+# In[ ]:
 
 
-# In[173]:
 
-get_ipython().magic('aimport trans.reg')
-from trans.reg import *
-(contribsMat, predMat, errMat) = reg.retAttrib_np(indMat, depMat, sensMat)
 
+# In[ ]:
 
-# In[174]:
-
-contribsMat.shape
-predMat.shape
-errMat.shape
-
-
-# In[175]:
-
-(list_of_contribs_dfs, predict_df, err_df) = reg.retAttrib_to_df(contribsMat, 
-                                                                 predMat, 
-                                                                 errMat,
-                                                                 ret_and_rolled_beta_df.index,
-                                                                 sensAttrs,
-                                                                 depTickers
-                                                               )
-
-
-# In[176]:
-
-len(list_of_contribs_dfs)
-list_of_contribs_dfs[0].shape
-predict_df.shape
-err_df.shape
-
-
-# In[177]:
-
-ret_and_rolled_beta_df.loc[:, idx["Pct",:]].tail()
-list_of_contribs_dfs[0].tail()
-predict_df.tail()
-err_df.tail()
-
-
-# In[178]:
-
-indTickers = [ col[1] for col in indCols ]
-contrib_k = [ "Contrib from " + indTickers[i] for i in range( len(list_of_contribs_dfs ))]
-
-
-# contrib_k + [ pred_k ] + [ err_k ]
-regResTrans = DataFrameConcat( list_of_contribs_dfs + [ predict_df ] + [ err_df ],
-                               df_keys= contrib_k + [ "Predicted" ]  + ["Error"]
-                             )
-regRes_df = regResTrans.fit_transform(pd.DataFrame())
-
-
-# In[179]:
-
-regRes_df.shape
-regRes_df.columns.get_level_values(0).unique()
-regRes_df.columns.get_level_values(1).unique()
-regRes_df.tail()
-
-
-# In[180]:
-
-from trans.reg import *
-reg_df =reg.retAttrib(ret_and_rolled_beta_df, 
-            indCols,
-            depCols, 
-            sensAttrs)
-
-reg_df.tail()
+sector_tickers =  { 
+    "Consumer Discretionary": "XLY",
+    "Consumer Staples": "XLP",
+    "Energy": "XLE",
+    "Financial": "XLF",
+    "Health": "XLV"
+    "Industrial": "XLI", 
+    "Materials" : "XLB",
+    "Real Estate"; "XLRE",
+    "Technology": "XLK", 
+    "Telecom": "XTL",
+    "Utilities": "XLU"
+   
 

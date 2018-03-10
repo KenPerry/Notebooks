@@ -7,31 +7,17 @@ from datetime import timedelta
 import re
 
 from trans.gtrans import *
-from trans.reg import Reg
+from trans.reg import Reg, RegAttr
 
 idx = pd.IndexSlice
 
 class RegPipe:
     """
-    TO DO:
-    reg.sensAttrs:  
-       assumes data in self.data; make it take df as arg ?
-       assumes betas in same df as data, that's why sensAttrs needs to serve
 
-    depTickersFromSensAttrs(sensAttrs ):
-       assumes data in self.data; make it take df as arg ?
-          that's why needs to search for non-sens as dependent
-
-    reg.retAttrib:
-       assumes sensitivities, indVars and depVars are all in same df
-        reg is ret_and_rolled_beta_df
-
-
-    - 
     """
     
     def __init__(self, df, debug=False):
-        self.df = df
+        self.df = df.copy()
         self.debug = debug
 
         self.reg = Reg(df)
@@ -57,46 +43,106 @@ class RegPipe:
 
         beta_df = reg.rollingModelAll( *ma, 
                                        start, end,
+                                       window,
                                        step
                                        )
 
         self.beta_df = beta_df
 
- 
-    def rollBeta(self):
+
+    def indexUnionBeta(self, freq_index):
+        """
+        Re-shapes self.beta_df
+
+        The modified self.beta_df index is the UNION of the original index f self.beta_df and the index freq_index
+        It DIFFERS from pd.reindex(freq_index) as follows:
+        - we get the UNION of the dates in the original and in freq_index
+        - pd.reindex(foo) will create a DataFrame whose index is exactly foo
+        """
+        
         beta_df = self.beta_df
 
-        rab = Reg(beta_df)
+        # Create an empty DataFrame with the index freq_index
+        empty_df = pd.DataFrame(index=freq_index)
 
-        beta_r_pl = make_pipeline( ShiftTransformer(1),
-                                   FillNullTransformer(method="ffill"),
+        # Join beta_df with the empty dataframe, resulting in an index that is the union of the indices of the two constituents
+        beta_df = pd.concat( [beta_df, empty_df], axis=1)
+        
+        self.beta_df = beta_df
+        
+    def rollBeta(self, periods, fill_method):
+        """
+        fill_method: {"ffill", "bfill"}
+        - ffill: forward fill
+        - bfill: backwards fill
+        """
+
+        regAttr = self.regAttr
+        beta_df = regAttr.beta_df
+
+        beta_r_pl = make_pipeline( ShiftTransformer(periods),
+                                   FillNullTransformer(method=fill_method),
                          )
         
         beta_rolled_df = beta_r_pl.fit_transform(beta_df)
 
-        self.beta_rolled_df = beta_rolled_df
+        return beta_rolled_df
+
+
+    def attrib_setup(self, df, beta_df, periods, fill_method):
+        """
+        Set self's internal attributes needed for attribution:
+        - df: DataFrame containing independant and dependant varialbes
+        - beta_df: DataFrame containing sensitivities of dependent to independent
+        """
+
+        ## Join the two DataFrames so that independent/dependent variables and sensitivities guaranteed to have same index
+        concatTrans = DataFrameConcat( [ df, beta_df ])
+        common_df = concatTrans.fit_transform(pd.DataFrame())
+
+        # Need to be able to separate the joined DataFrame back into it's pieces
+        sensAttrs = beta_df.columns.get_level_values(0).unique().tolist()
+
+        rp_df      =  common_df.loc[:, idx["Pct",:]]
+        rp_beta_df =  common_df.loc[:, idx[sensAttrs,:] ]
+        
+        # Create an attribution object
+        # Place the data and sensitivities in it
+        regAttr = RegAttr(rp_df)
+        self.regAttr = regAttr
+
+        # TO DO: redundant: regAttr can derive sensAttrs from the beta_df stored inside
+        regAttr.sensAttrs = sensAttrs
+
+
+        # Place the sensitivities into regAttr
+        regAttr.setSens(rp_beta_df)
+
+        # Roll the betas so they have the same frequency as the data
+        beta_rolled_df = self.rollBeta(periods, fill_method)
+        regAttr.setSens(beta_rolled_df)
+
+
+        # The dependents are derived from those tickers that have sensitivities
+        depTickers = regAttr.depTickersFromSensAttrs(sensAttrs)
+        depCols = [ ("Pct", t) for t in depTickers ]
+
+        regAttr.depCols = depCols
+
+        # Add a constant column to the data (for the intercept attribution)
+        regAttr.addConst(("Pct", "1"), 1)
+
         
 
     def attrib(self):
-        reg = self.reg
-        df  = reg.data
+        regAttr = self.regAttr
 
-        beta_df = self.beta_rolled_df
-
-    
+        depCols = regAttr.depCols
+        sensAttrs = regAttr.sensAttrs
+        
         indCols = [ ("Pct", "1"), self.indCol ]
 
-        sensAttrs = beta_df.columns.get_level_values(0).unique().tolist()
-
-        regBeta = Reg(beta_df)
-
-        depTickers = regBeta.depTickersFromSensAttrs(sensAttrs )
-        depCols = [ ("Pct", t) for t in depTickers ]
-
-        reg.addConst(("Pct", "1"), 1)
-
-        # TO DO: assumes the df in reg contains both dependents/independents (indCols, depCols) AND sensitivities in same df
-        retAttr_df =reg.retAttrib(
+        retAttr_df =regAttr.retAttrib(
             indCols,
             depCols, 
             sensAttrs)

@@ -11,6 +11,11 @@ from trans.reg import Reg, RegAttr
 
 idx = pd.IndexSlice
 
+
+### TO DO:
+####  addConst and related: intercept attribute name is "Pct" -- could be anything
+####  Sensitivity attribute is "Beta" (hard-coded).  Use this to find dep. tickers (level 1).  Then need to find depCols (assumes single attribute, noq)
+
 class RegPipe:
     """
 
@@ -21,11 +26,14 @@ class RegPipe:
         self.debug = debug
 
         self.reg = Reg(df)
-        self.regAttr = RegAttr(df)
 
 
-    def indCol(self, col):
-        self.indCol = col
+    def indCols(self, cols):
+        """
+        Set independent variable column names to cols
+        """
+        
+        self.indCols = cols
         
 
     def addConst():
@@ -38,12 +46,13 @@ class RegPipe:
         
     def regress(self, start, end, window, step):
         reg = self.reg
-        indCol = self.indCol
+        indCols = self.indCols
         
-        ma = reg.modelCols( [ indCol ])
+        ma = reg.modelCols( indCols )
 
         beta_df = reg.rollingModelAll( *ma, 
                                        start, end,
+                                       window,
                                        step
                                        )
 
@@ -76,8 +85,9 @@ class RegPipe:
         - ffill: forward fill
         - bfill: backwards fill
         """
- 
-        beta_df = self.beta_df
+
+        regAttr = self.regAttr
+        beta_df = regAttr.beta_df
 
         beta_r_pl = make_pipeline( ShiftTransformer(periods),
                                    FillNullTransformer(method=fill_method),
@@ -85,34 +95,69 @@ class RegPipe:
         
         beta_rolled_df = beta_r_pl.fit_transform(beta_df)
 
-        self.beta_rolled_df = beta_rolled_df
+        return beta_rolled_df
+
+
+    def attrib_setup(self, df, beta_df, periods, fill_method):
+        """
+        Set self's internal attributes needed for attribution:
+        - df: DataFrame containing independant and dependant varialbes
+        - beta_df: DataFrame containing sensitivities of dependent to independent
+        """
+
+        # Join the two DataFrames so that independent/dependent variables and sensitivities guaranteed to have same index
+        ## Use df_keys so we can separate the two parts later
+        concatTrans = DataFrameConcat( [ df, beta_df ], df_keys=[ "Data", "Sens"])
+        common_df = concatTrans.fit_transform(pd.DataFrame())
+
+        # Need to be able to separate the joined DataFrame back into it's pieces
+        sensAttrs = beta_df.columns.get_level_values(0).unique().tolist()
+
+        # Separate the joined parts back into the individual components (but now having a common index)
+        rp_df      =  common_df.loc[:, idx["Data",:,:]]
+        rp_df.columns = rp_df.columns.droplevel(0)
+                                       
+                                       
+        rp_beta_df =  common_df.loc[:, idx["Sens",:,:] ]
+        rp_beta_df.columns = rp_beta_df.columns.droplevel(0)
+        
+        # Create an attribution object
+        # Place the data and sensitivities in it
+        regAttr = RegAttr(rp_df)
+        self.regAttr = regAttr
+
+
+        # Place the sensitivities into regAttr
+        regAttr.setSens(rp_beta_df)
+
+        # Roll the betas so they have the same frequency as the data
+        beta_rolled_df = self.rollBeta(periods, fill_method)
+        regAttr.setSens(beta_rolled_df)
+
+
+        # The dependents are derived from those tickers that have sensitivities
+        depTickers = regAttr.depTickersFromSensAttrs(sensAttrs)
+        depCols = [ ("Pct", t) for t in depTickers ]
+
+        regAttr.depCols = depCols
+
+        # Add a constant column to the data (for the intercept attribution)
+        regAttr.addConst(("Pct", "1"), 1)
+
         
 
     def attrib(self):
-        reg = self.reg
         regAttr = self.regAttr
+
+        depCols = regAttr.depCols
         
-        df  = reg.data
+        indCols_w_intercept = [ c for c in self.indCols ]
+        indCols_w_intercept.insert(0, ("Pct", "1"))
 
-        beta_df = self.beta_rolled_df
-
-    
-        indCols = [ ("Pct", "1"), self.indCol ]
-
-        sensAttrs = beta_df.columns.get_level_values(0).unique().tolist()
-
-        regAttr.setSens(beta_df)
-
-        depTickers = regAttr.depTickersFromSensAttrs(sensAttrs )
-        depCols = [ ("Pct", t) for t in depTickers ]
-
-        regAttr.addConst(("Pct", "1"), 1)
-
-        # TO DO: assumes the df in reg contains both dependents/independents (indCols, depCols) AND sensitivities in same df
         retAttr_df =regAttr.retAttrib(
-            indCols,
-            depCols, 
-            sensAttrs)
+            indCols_w_intercept,
+            depCols
+            )
 
         self.retAttr_df = retAttr_df
 
