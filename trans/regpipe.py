@@ -45,6 +45,10 @@ class RegPipe:
         
         
     def regress(self, start, end, window, step):
+        """
+        Rolling regression of size window,  from end backwards to start, in steps of size step
+        """
+        
         reg = self.reg
         indCols = self.indCols
         
@@ -58,32 +62,42 @@ class RegPipe:
 
         self.beta_df = beta_df
 
-
-    def indexUnionBeta(self, freq_index):
+    def regressSingle(self):
         """
-        Re-shapes self.beta_df
-
-        The modified self.beta_df index is the UNION of the original index f self.beta_df and the index freq_index
-        It DIFFERS from pd.reindex(freq_index) as follows:
-        - we get the UNION of the dates in the original and in freq_index
-        - pd.reindex(foo) will create a DataFrame whose index is exactly foo
+        Single regression using entire DataFrame (in self.reg.data)
         """
-        
-        beta_df = self.beta_df
 
-        # Create an empty DataFrame with the index freq_index
-        empty_df = pd.DataFrame(index=freq_index)
+        df = self.df
+        start, end = df.index.min(), df.index.max()
+        window = end - start + timedelta(days=1)
+        step   = window
 
-        # Join beta_df with the empty dataframe, resulting in an index that is the union of the indices of the two constituents
-        beta_df = pd.concat( [beta_df, empty_df], axis=1)
-        
-        self.beta_df = beta_df
+        return self.regress(start, end, window, step)
         
     def rollBeta(self, periods, fill_method):
         """
+        Roll and fill the betas contained in self.beta_df
+
+        self.beta_df usually sparse (e.g., every "step" days, where step is the increment of rolling regression).
+        Result of rollBeta is completely filled DataFrame (using the fill_method).
+        Before rolling, the betas can be shifted in time to accomodate in/out of sample calculations
+
+        - periods=0, fill_method="bfill": can use to calculate regression residual
+        - periods=1, fill_method="ffill": can use to calculate forward prediction/outperformance
+
+
+        Parameters
+        ----------
+        periods: integer amount (positive/negative) to roll beta forward/backward before filling
+
         fill_method: {"ffill", "bfill"}
         - ffill: forward fill
         - bfill: backwards fill
+
+            
+        Returns
+        ----------
+        beta_rolled_df DataFrame
         """
 
         regAttr = self.regAttr
@@ -147,6 +161,15 @@ class RegPipe:
         
 
     def attrib(self):
+        """
+        Run the attribution:
+        - attribution of the return (of each column in self.regAttr.depCols)
+        - return is attributed to intercept and the independent variable columns (self.indCols)
+        - return attribution attributed to a variable is based on the sensitivity of the dependent to that variable (based on the sensitivites set by self.regAttr.setSens)
+
+        -- this is usually preceded by a call to self.attrib_setup
+        """
+        
         regAttr = self.regAttr
 
         depCols = regAttr.depCols
