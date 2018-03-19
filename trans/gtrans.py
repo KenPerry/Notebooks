@@ -14,6 +14,40 @@ from trans.data import GetData
 
 idx = pd.IndexSlice
 
+def good_housekeeping(X, **params):
+    """
+    Make sure the row and column indices of DataFrame X are sorted:
+
+    Parameters
+    ----------
+    X: DataFrame
+
+    Returns
+    ----------
+    trans: DataFrame
+    """
+
+    if params and ("inplace" in params) and params["inplace"] == True:
+        inplace = True
+        trans = X
+    else:
+        inplace = False
+        trans = X.copy()
+
+    # Always a good idea to sort after altering an index (either axis)
+    trans.sort_index(axis=0, inplace=True)
+
+    if isinstance(trans.columns, pd.MultiIndex):
+        # Always a good idea to sort columns
+        # NOTE: sortlevel is deprecated, use sort_index with axis=1
+        trans.sort_index(axis=1, level=0, inplace=True)
+        trans.sort_index(axis=1, level=1, inplace=True)
+    else:
+        trans.sort_index(axis=1, inplace=True)
+
+    return trans
+
+
 """
 Common patterns:
 
@@ -123,6 +157,7 @@ class DataFrameFunctionTransformer(BaseEstimator, TransformerMixin):
         X : DataFrame
             
         Returns
+nulpass
         ----------
         trans : pandas DataFrame
             Transformation of X 
@@ -1293,3 +1328,81 @@ class GetDataTransformer(BaseEstimator, TransformerMixin):
         
         return self
     
+
+class SklearnPreproccessingTransformer(BaseEstimator, TransformerMixin):
+    """
+    Applies an sklearn.preprocessing transformation "transformer".
+
+    Issue: sklearn takes pandas as inputs, but the transformations lose all index and column info.  This object preserves it.
+    """
+
+    def __init__(self, transformer, **init_params):
+          self.transformer = transformer
+          self.init_params = init_params
+
+
+    def transform(self, X, y=None, **params):
+        """ 
+        Apply self.transformer.transform to X
+        
+        Parameters
+        ----------
+        X : pandas DataFrame
+                
+        
+        Returns
+        ----------
+        trans: DataFrame of transformed data 
+        """
+
+        transformer = self.transformer
+
+        # Apply the transform method
+        trans = pd.DataFrame( transformer.transform(X, **params))
+
+        # The resulting DataFrame should have the same index and columns as its input
+        trans.index = X.index
+        trans.columns = X.columns
+
+        # Always a good idea to sort after altering an index (either axis)
+        good_housekeeping(trans, inplace=True)
+        return trans
+
+
+        # Always a good idea to sort after altering an index (either axis)
+        trans.sort_index(axis=0,inplace=True)
+        
+        if isinstance(X.columns, pd.MultiIndex):
+            # Always a good idea to sort columns
+            # NOTE: sortlevel is deprecated, use sort_index with axis=1
+            trans.sort_index(axis=1, level=0, inplace=True)
+            trans.sort_index(axis=1, level=1, inplace=True)
+        else:
+            trans.sort_index(axis=1, inplace=True)
+
+        return trans
+
+
+    def fit(self, X, y=None, **params):
+        """ 
+        Fit self.transformer.fit to X
+        
+        Parameters
+        ----------
+        X : pandas DataFrame
+                
+        
+        Returns
+        ----------
+        self  
+        """
+
+        # The "fit" method of self.transformer may (and usually does) modify self.transformer
+        #   The typical way is to store fitting parameters (fit from the training data) that can be applied via self.transform to non-training data
+        transformer = self.transformer
+        transformer.fit(X, params)
+        
+        return self
+    
+
+          

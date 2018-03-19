@@ -11,124 +11,36 @@ get_ipython().magic('load_ext autoreload')
 get_ipython().magic('autoreload 1')
 
 
-# In[16]:
+# In[2]:
 
-import pandas as pd
-idx = pd.IndexSlice
-
-import datetime as dt
-from datetime import date
-from datetime import timedelta
-import dateutil.parser as dup
-
-get_ipython().magic('aimport trans.data')
-get_ipython().magic('aimport trans.gtrans')
-get_ipython().magic('aimport trans.reg')
-get_ipython().magic('aimport trans.regpipe')
-
-from trans.data import GetData
-gd = GetData()
-from trans.gtrans import *
-from trans.reg import Reg, RegAttr
-from trans.regpipe import RegPipe
-
-
-
-# In[19]:
-
-today = dt.datetime.combine( date.today(), dt.time.min)
-today
-
-start = dup.parse("01/01/2000")
-start
-
-
-# In[20]:
-
-gd = GetData()
-univ = gd.existing()
-univ.sort()
-
-len(univ)
-
-
-# In[21]:
-
-sectors =  { 
-    "Consumer Discretionary": "XLY",
-    "Consumer Staples": "XLP",
-    "Energy": "XLE",
-    "Financial": "XLF",
-    "Health": "XLV",
-    "Industrial": "XLI", 
-    "Materials" : "XLB",
-    "Real Estate": "XLRE",
-    "Technology": "XLK", 
-    "Telecom": "XTL",
-    "Utilities": "XLU"
-}
-   
-
-
-# In[22]:
-
-sector_tickers = list( sectors.values() )
-
-
-# In[28]:
-
-changed_tickers = gd.get_data( sector_tickers, start, today )
-
-
-# In[29]:
-
-len(sector_tickers)
-len(changed_tickers)
-list( set(sector_tickers) - set(changed_tickers))
+import pandas as pd 
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+get_ipython().magic('matplotlib inline')
 
 
 # In[30]:
 
-price_df = GetDataTransformer(sector_tickers, cal_ticker="SPY").fit_transform( pd.DataFrame())
-price_df.shape
+dates = [ "12/01/2018", "12/29/2018" ]
+row1 = { ("PC1", "T1"): 111, ("PC2", "T1"): 121, ("PC1", "T2"): 211, ("PC2","T2"): 221 }
+row2 = { ("PC1", "T1"): 112, ("PC2", "T1"): 122, ("PC1", "T2"): 212, ("PC2","T2"): 222}
+rows = { ("PC1", "T1"): [111, 112], ("PC2", "T1"): [121, 122], ("PC1", "T2"): [211, 212], ("PC2","T2"): [221,222] } 
+tuples = [ (111, 121, 211, 221), (112, 122, 212, 222)]
 
 
-# In[ ]:
+# In[48]:
 
-get_ipython().magic('aimport trans.data')
-raw_df = gd.combine_data(['FB', 'AAPL', 'AMZN', 
-                           'NFLX', 'GOOG', 'SPY'])
-raw_df.head()
-
-
-# In[ ]:
+c=pd.MultiIndex.from_tuples([ ("PC1", "T1"), ("PC2", "T1"), ("PC1", "T2"), ("PC2", "T2")])
+d = pd.DataFrame(tuples, columns=c)
+d.columns
+d
 
 
+# In[28]:
 
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-sector_tickers =  { 
-    "Consumer Discretionary": "XLY",
-    "Consumer Staples": "XLP",
-    "Energy": "XLE",
-    "Financial": "XLF",
-    "Health": "XLV"
-    "Industrial": "XLI", 
-    "Materials" : "XLB",
-    "Real Estate"; "XLRE",
-    "Technology": "XLK", 
-    "Telecom": "XTL",
-    "Utilities": "XLU"
-   
+df = pd.DataFrame(rows, index=dates)
+df.index
+df.columns
 

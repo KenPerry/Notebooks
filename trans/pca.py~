@@ -1,0 +1,116 @@
+import pandas as pd
+import numpy as np
+
+from sklearn.pipeline import Pipeline, make_pipeline
+
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+
+import re
+from datetime import timedelta
+
+from trans.gtrans import *
+
+idx = pd.IndexSlice
+
+
+
+class PrincipalComp:
+    """
+
+    """
+
+    # INTERNAL methods: take df as argument
+    #-------------------------------------------------------
+
+    def __init__(self, df, debug=False, **params):
+        """
+        data: DataFrame containing
+        """
+        
+        self.df = df.copy()
+        self.Debug = debug
+
+
+    def scale_df(self, df):
+        """
+        Apply sklearn StandardScaler to df (to convert each column into a z-score.
+        Need to do this to gt PCA of correlation matrix, rather than covariance matrix
+        """
+
+        scale_pl = make_pipeline( SklearnPreproccessingTransformer( StandardScaler() ) )
+
+        scaled_df = scale_pl.fit_transform(df)
+
+        return scaled_df
+    
+    def fit(self,  df):
+        """
+        df is a DataFrame
+        """
+
+        # Scale the data (convert each column to z-score)
+        scaled_df = self.scale_df(df)
+
+        pca = PCA(n_components=2)
+        principalComponents = pca.fit_transform(scaled_df)
+        principalDf = pd.DataFrame(data = principalComponents
+             , columns = ['principal component 1', 'principal component 2'])
+
+        return { "pcs": principalComponents,
+                 "pca": pca
+            }
+
+    def rollingPCA(self, df, start, end, windowTimeDelta, stepTimeDelta=None):
+        """
+        """
+
+        firstDate = self.df.index[0]
+        
+        oneDayTimeDelta = timedelta(days=1)
+
+        results = []
+        
+        # End e (inclusive) and start s for first fit
+        (e,s)  = (end, end - windowTimeDelta + oneDayTimeDelta)
+
+        while (s >= start):
+            # NOTE: s,e are DateTimes so s:e are all the rows INCLUSIVE of e (as opposed to if s,e were integers, in which case last row is (e-1)
+            thisDf = df.loc[s:e,:]
+
+            if self.Debug:
+                print("rollingFit: {s} to {e}".format(s=s, e=e))
+                
+            result  = self.fit(thisDf)
+
+            results.append( (e, result) )
+
+            e = e - stepTimeDelta
+            s = e - windowTimeDelta + oneDayTimeDelta
+
+
+        return results
+
+        
+    # EXTERNAL methods: takes df from SELF.df
+    #-------------------------------------------------------
+
+
+    def singlePCA(self):
+        """
+        Single PCA using entire DataFrame (in self.data)
+        """
+
+        df = self.df
+        start, end = df.index.min(), df.index.max()
+        window = end - start + timedelta(days=1)
+        step   = window
+
+        result = self.rollingPCA(df, start, end, window, step)
+
+        # Result is an  (single-element) array of pairs (end, pca_result).  Return just pca_result of sole member of result
+        return result[0][1]
+    
+
+        
+ 

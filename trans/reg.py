@@ -29,7 +29,7 @@ class Reg:
         - last column is the dependent; all others are independent
         """
         
-        self.data = data
+        self.data = data.copy()
         self.Debug = debug
 
     
@@ -246,7 +246,7 @@ class Reg:
 
 class RegAttr:
     def __init__(self, data):
-        self.data = data
+        self.data = data.copy()
     
     def addConst(self, colName, val):
         """
@@ -255,9 +255,8 @@ class RegAttr:
         colName is a column name
         val is a value
         """
-        print("addConst")
         df = self.data
-        df[colName] = val
+        df.loc[:, colName] = val
 
         
     def depTickersFromSensAttrs(self, sensAttrs):

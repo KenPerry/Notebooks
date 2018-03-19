@@ -16,182 +16,204 @@ get_ipython().magic('autoreload 1')
 import pandas as pd
 idx = pd.IndexSlice
 
-from sklearn.pipeline import Pipeline, make_pipeline
-from sklearn.linear_model import LinearRegression
-
+import datetime as dt
+from datetime import date
 from datetime import timedelta
+import dateutil.parser as dup
 
 get_ipython().magic('aimport trans.data')
 get_ipython().magic('aimport trans.gtrans')
 get_ipython().magic('aimport trans.reg')
+get_ipython().magic('aimport trans.regpipe')
 
-from trans.data import GetData as gd
+from trans.data import GetData
+gd = GetData()
 from trans.gtrans import *
-from trans.reg import Reg
-
-pctTrans     = DataFrameFunctionTransformer(func = lambda s: s.pct_change())
-rankTrans    = DataFrameFunctionTransformer(func = lambda s: s.rank(method="first"), axis=1)
-pctOnlyTrans = GenSelectAttrsTransformer(['Pct'], dropSingle=False )
+from trans.reg import Reg, RegAttr
+from trans.regpipe import RegPipe
 
 
-# ## Get the raw data
+# ## Verify prices (GetDataTransformer)
 
-# In[8]:
+# In[36]:
 
-get_ipython().magic('aimport trans.data')
-raw_df = gd.combine_data(['FB', 'AAPL', 'AMZN', 
-                           'NFLX', 'GOOG', 'SPY'])
-raw_df.head()
+def verify_df(df, v_df, cols=None, debug=False, **params):
+    (min_d, max_d) = (v_df.index.min(), v_df.index.max())
+    if debug:
+        print("Verified df ({}, {}), shape {}".format(min_d, max_d, v_df.shape))
+        print(df.columns)
+        print(v_df.columns)
+    
+    # Output the verified df to a csv for hand-verification
+    v_df.to_csv("/tmp/verify.csv")
+    
+    if (not cols == None):
+        return df.loc[ min_d:max_d, cols].equals( v_df.loc[:, cols])
+    else:
+        return df.loc[ min_d:max_d, v_df.columns].equals( v_df.loc[:,:])
 
-
-# ## Define featUn transformer: compute Pct and append to Adj Close
-
-# In[ ]:
-
-pipe_close = make_pipeline(GenSelectAttrsTransformer(['Adj Close'], dropSingle=True )
-                      )   
-
-pipe_pct   = make_pipeline(GenSelectAttrsTransformer(['Adj Close'], dropSingle=True ), 
-                         pctTrans,
-                      )
-
-featUn = GenDataFrameFeatureUnion( [ ("Adj Close", pipe_close),
-                                    ("Pct", pipe_pct)
-                                   ] )
+    
+def verify_file(df, verified_df_file, cols=None, debug=False,**params):
+    """
+    Compare DataFrame to one that is stored in a file
+    
+    Parameters:
+    --------------
+    df: DataFrame
+    verified_df_file: string. Name of pkl file containing verified DataFrame
+    
+    Returns
+    --------
+    Boolean
+    """                   
+    v_df = gd.load_data(verified_df_file)
+    return verify_df(df, v_df)
+   
 
 
 # In[4]:
 
-pipe_pct_only   = make_pipeline(GenSelectAttrsTransformer(['Pct'], dropSingle=False ) ) 
+sector_tickers = ['SPY',
+ 'XLY',
+ 'XLP',
+ 'XLE',
+ 'XLF',
+ 'XLV',
+ 'XLI',
+ 'XLB',
+ 'XLRE',
+ 'XLK',
+ 'XTL',
+ 'XLU']
+
+price_df = GetDataTransformer(sector_tickers, cal_ticker="SPY").fit_transform( pd.DataFrame())
 
 
-# ## Create pipeline to prepare data for regression
+# In[37]:
+
+verify_file( price_df, "verify_sectors_raw_df.pkl")
+
+
+# ## Verify returns (pctTrans)
 
 # In[6]:
 
-pipe_nn = make_pipeline( featUn,
-                         DatetimeIndexTransformer("Dt"),
-                         pctOnlyTrans,
-                         RestrictToCalendarColTransformer( ("Pct", "SPY")),
-                         RestrictToNonNullTransformer("all"),
-                         # FillNullTransformer(method="bfill")
-                       )
-pct_df = pipe_nn.fit_transform(ai)
-pct_df.head()
+pipe_pct   = make_pipeline(GenSelectAttrsTransformer(['Adj Close'], dropSingle=False),
+                           pctTrans,
+                           GenRenameAttrsTransformer(lambda col: "Pct", level=0)
+                          )
+pct_df = pipe_pct.fit_transform(price_df)
 
-
-# ## Do a rolling regression on the dataframe with prepared data
-
-# In[21]:
-
-ra = Reg(pct_df)
-ma = ra.modelCols( [ idx["Pct", "SPY"]])
-ma
-
-beta_df = ra.rollingModelAll( *ma, #idx["Pct", "AAPL"],
-                 pd.to_datetime("01/01/2000",infer_datetime_format=True),
-                 # pd.to_datetime("04/14/2000", infer_datetime_format=True),
-                 pd.to_datetime("12/29/2017", infer_datetime_format=True),
-                 timedelta(weeks=4)
-            )
-beta_df.tail()
-
-
-# ## Append the rolling betas to the prepared data
-
-# In[22]:
-
-concatTrans = DataFrameConcat( [ pct_df, beta_df ])
-ret_and_beta_df = concatTrans.fit_transform(pd.DataFrame())
-ret_and_beta_df.tail()
-ret_and_beta_df.shape
-
-
-# In[23]:
-
-gd.save_data(pct_df, "ret_df.pkl")
-gd.save_data(beta_df, "beta_df.pkl")
-gd.save_data(ret_and_beta_df, "ret_and_beta_df.pkl")
-
-
-# ## Prepare for Return Attribution
-
-# ### Find the attributes with the sensitivities
 
 # In[39]:
 
-betaAttrs = reg.sensAttrs('^Beta \d+$')
-betaAttrs
+verify_file(pct_df, "verify_sectors_pct_df.pkl")
 
 
-# ## Roll the betas forward
+# ## Verify single regression
+
+# In[8]:
+
+regParams = gd.load_data("verify_regParams.pkl")
+(start, end, step, window) = list( map( lambda c: regParams[c], [ "start", "end", "step", "window" ]) )
+
+
+# In[18]:
+
+regStarts = end - window + timedelta(days=1)
+regStarts, end
+pct_dfs = pct_df.loc[ regStarts:end,:]
+
+rps = RegPipe( pct_dfs )
+rps.indCols( [ idx["Pct", "SPY"] ] )
+rps.regressSingle()
+
+rps.beta_df.shape
+
+
+# In[40]:
+
+verify_file( rps.beta_df, "verify_beta_df.pkl")
+
+
+# ## Continuation: Verify residuals of single regression
+
+# In[12]:
+
+rollAmount = 0
+fillMethod = "bfill"
+
+rps.attrib_setup(pct_dfs, rps.beta_df, rollAmount, fillMethod)
+rps.attrib()
+
+rps.retAttr_df.shape
+
+sector_residuals = rps.retAttr_df.loc[:, idx["Error",:]]
+
 
 # In[41]:
 
-beta_r_pl = make_pipeline( GenSelectAttrsTransformer(betaAttrs),
-                            FillNullTransformer(method="ffill"),
-                            GenRenameAttrsTransformer(lambda col: col + ' rolled fwd', level=0)
-                         )
-beta_rolled_df = beta_r_pl.fit_transform(ret_and_beta_df)
-beta_rolled_df.tail()
+verify_file( sector_residuals, "sector_residuals.pkl")
 
 
-# ### Append the rolled betas to the regression results
+# ## Verify stacked residual
 
-# In[26]:
+# In[30]:
 
-ret_and_rolled_beta_pl = DataFrameConcat( [ ret_and_beta_df, beta_rolled_df])
-ret_and_rolled_beta_df = ret_and_rolled_beta_pl.fit_transform( pd.DataFrame() )
-ret_and_rolled_beta_df.tail()
+from trans.stack_residual import Residual
 
-
-# In[27]:
-
-reg = Reg(ret_and_rolled_beta_df)
-
-
-# ### Find the columns for: 
-# #### independent variables
-# #### dependent variables
-# #### sensitivities
-
-# In[28]:
-
-indCols = [ ("Pct", "1"), ("Pct", "SPY")]
-indCols
-
-depTickers = reg.depTickersFromSensAttrs(sensAttrs )
-depTickers
-depCols = [ ("Pct", t) for t in depTickers ]
-depCols
-
-sensAttrs = reg.sensAttrs('^Beta \d+ rolled fwd$')
-sensAttrs
+resStart = dup.parse("01/01/2016")
+rstack = Residual(debug=True)
+rstack.init(df=pct_df, start=resStart, end=end, window=window, step=step)
+resid_stack = rstack.repeated()
+rstack.done()
 
 
-# ## Add constant (for interecept return) column
+# In[32]:
 
-# In[29]:
-
-reg.addConst(("Pct", "1"), 1)
+v_stack = gd.load_data("verify_resid_stack.pkl")
 
 
-# ### Perform the return attribution
+# ### Verify single regression matches first element of stack
 
-# In[33]:
+# In[72]:
 
-retAttr_df =reg.retAttrib(
-            indCols,
-            depCols, 
-            sensAttrs)
+(v_label, v_df) = v_stack[0]
+verify_df(sector_residuals, v_df)
 
 
-# In[34]:
+# ## Verify first element of stack
 
-retAttr_df.tail()
+# In[51]:
+
+(label, df) = resid_stack[0]
+verify_df(df, v_df)
 
 
-# In[35]:
+# ## Verify second element of stack
 
-gd.save_data(retAttr_df, "retattr_df.pkl")
+# In[53]:
+
+(v_label, v_df) = v_stack[1]
+(label, df) = resid_stack[1]
+verify_df(df, v_df)
+
+
+# ### Manually carry out second single regression so can compare beta0, beta1, by hand with spreadsheet
+
+# In[66]:
+
+end2 = end - step
+regStarts2 = end2 - window + timedelta(days=1)
+regStarts2, end2
+
+
+# In[71]:
+
+
+pct_dfs2 = pct_df.loc[ regStarts2:end2,:]
+
+rps2 = RegPipe( pct_dfs2 )
+rps2.indCols( [ idx["Pct", "SPY"] ] )
+rps2.regressSingle()
 
