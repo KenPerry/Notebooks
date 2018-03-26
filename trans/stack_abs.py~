@@ -8,6 +8,24 @@ from trans.pca import PrincipalComp
 
 from datetime import timedelta
 
+"""
+Base class for Stacked computation
+
+A computation stack is a sequence of identical computations (e.g., foo(X)) , applied to a sequence of data (e.g., X's: X_0, X_1, ...)
+
+The next input in the sequence (thisDf = X_i) is obtained by the method "nextChunk".
+This input is applied to the computation via the method "do", i.e., self.do(thisDf)
+The result of this computation is paired with a label, and the sequence of pairs is the output of the stacked computation
+
+The method "repeated" applies this computation sequence by repeatedly executing: 
+   thisDf = self.nextChunk;
+   result = self.do(thisDf)
+
+   results.append( (thisLabel, result) )
+
+So the result is an array of pairs, each pair being a label and a DataFrame
+"""
+
 class StackBase:
     def __init__(self, debug=False, **params):
         self.Debug = debug
@@ -16,13 +34,25 @@ class StackBase:
         print("init: need to override")
 
     def nextChunk(self):
+        """
+        Abstract method.
+        Returns next chunk (DataFrame) of data.
+        """
         print("nextChunk: need to override")        
 
 
     def do(self, df):
+        """
+        Abstract method.
+        Applies the computation to the next chunk (DataFrame)
+        """
         print("do: need to override")
 
     def done(self):
+        """
+        Abstract method.
+        Can be optionally called at end of sequence of computations.  For cleanup or finalization
+        """
         print("done: need to override")
 
     def is_next(self):
@@ -34,22 +64,22 @@ class StackBase:
         
     def repeated(self):
         """
-        TO DO: Abstract away self.residual(thisDf) to an over-ridden method. e.g., (residual fed into PCA) pipeline.  Issue is that PCA doesn't return DataFrame
+        Repeatedly: obtain next chunk of data, apply computation to it, save the pair (label, result) to the sequence of results
         """
 
         results = []
         
 
-        while ( self. is_next() ):
-            # NOTE: s,e are DateTimes so s:e are all the rows INCLUSIVE of e (as opposed to if s,e were integers, in which case last row is (e-1)
+        while ( self.is_next() ):
             thisLabel, thisDf = self.nextChunk()
 
             if self.Debug:
-                print("rollingFit: {s} to {e}".format(s=self.s, e=self.e))
+                print("repeated: chunk label {} with shape {}".format(thisLabel, thisDf.shape))
                 
-            result  = self.residual(thisDf)
+            result  = self.do(thisDf)
 
             results.append( (thisLabel, result) )
 
            
         return results
+

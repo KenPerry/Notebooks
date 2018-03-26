@@ -1053,24 +1053,21 @@ class GenRankEndOfPeriodAttrTransformer(BaseEstimator, TransformerMixin):
         dest_attr = self.dest_attr
         rank_df = self.rank_df
 
-        # The ranks computed at end of period are used for the FOLLOWING period. Shift forward one period
-        shift_pl = make_pipeline( ShiftTransformer(1) )
-        rank_shift_df = shift_pl.fit_transform( rank_df )
-
+ 
+        # The ranks computed for period p (spanning dates ( end_date_period(p-1)+1: end_date_period(p) ) are applied to forward to period (p+1) spanning dates (end_date_period(p)+1: end_date_period(p+1)
         # Convert the end of period frequency to the same index as X (usually, at daily frequency instead of end of period frequency)
-        rank_shift_daily_df = pd.concat(  [rank_shift_df,  pd.DataFrame(index=X.index) ], axis=1 )
+        rank_daily_df = pd.concat(  [rank_df,  pd.DataFrame(index=X.index) ], axis=1 )
 
         # Always a good idea to sort after altering an index (either axis)
-        rank_shift_daily_df.sortlevel(axis=0, inplace=True)
-        rank_shift_daily_df.sortlevel(axis=1, inplace=True)
+        good_housekeeping(rank_daily_df, inplace=True)
+        
+        # We now push the ranks for period p forward one day (i.e., to end_date_period(p)+1.) and forward fill. Result attribute is dest_attr
+        fill_pl = make_pipeline( ShiftTransformer(1),
+                                 FillNullTransformer(method="ffill"),
+                                 AddAttrTransformer( dest_attr )
+        )
 
-
-        # We now have the ranks, pushed forward to end of following period.  Backfill daily for the entire month. Result attribute is dest_attr
-        bfill_pl = make_pipeline( FillNullTransformer(method="bfill"),
-                                  AddAttrTransformer( dest_attr )
-                                  )
-
-        rank_shift_daily_df = bfill_pl.fit_transform( rank_shift_daily_df )
+        rank_shift_daily_df = fill_pl.fit_transform( rank_daily_df )
 
         trans = rank_shift_daily_df
 
@@ -1231,7 +1228,7 @@ class GenRankToPortRetTransformer(BaseEstimator, TransformerMixin):
         
         hi_rank, lo_rank = 5, 1
         # hmlWtTrans = DataFrameFunctionTransformer(func = lambda s: (s >= hi_rank) * 1.0 + (s <= lo_rank) * -1.0)
-        hmlWtTrans = DataFrameFunctionTransformer(func = rank_to_wt_func)
+        hmlWtTrans = DataFrameFunctionTransformer(func = rank_to_wt_func, axis=1)
         
         wt_pl = make_pipeline( GenSelectAttrsTransformer( [ rank_attr ], dropSingle=True),
                                hmlWtTrans
@@ -1273,6 +1270,8 @@ class GetDataTransformer(BaseEstimator, TransformerMixin):
 
         # Make sure cal_ticker is in tickers
         if not cal_ticker in tickers:
+            # Make a copy of tickers since .insert modifies
+            tickers = list(tickers)
             tickers.insert(0, cal_ticker)
             
         self.tickers, self.cal_ticker = tickers, cal_ticker
@@ -1366,21 +1365,9 @@ class SklearnPreproccessingTransformer(BaseEstimator, TransformerMixin):
 
         # Always a good idea to sort after altering an index (either axis)
         good_housekeeping(trans, inplace=True)
-        return trans
-
-
-        # Always a good idea to sort after altering an index (either axis)
-        trans.sort_index(axis=0,inplace=True)
-        
-        if isinstance(X.columns, pd.MultiIndex):
-            # Always a good idea to sort columns
-            # NOTE: sortlevel is deprecated, use sort_index with axis=1
-            trans.sort_index(axis=1, level=0, inplace=True)
-            trans.sort_index(axis=1, level=1, inplace=True)
-        else:
-            trans.sort_index(axis=1, inplace=True)
 
         return trans
+
 
 
     def fit(self, X, y=None, **params):
@@ -1403,6 +1390,54 @@ class SklearnPreproccessingTransformer(BaseEstimator, TransformerMixin):
         transformer.fit(X, params)
         
         return self
+    
+
+          
+class CumRetTransformer(BaseEstimator, TransformerMixin):
+    """
+    Computes cumulative returns of columns
+    """
+
+    def __init__(self,  **init_params):
+        return
+
+
+    def transform(self, X, y=None, **params):
+        """ 
+        Apply self.transformer.transform to X
+        
+        Parameters
+        ----------
+        X : pandas DataFrame
+                
+        
+        Returns
+        ----------
+        trans: DataFrame, in which columns are cumulative returns of X
+        """
+
+        # Cumulative return is running product of 1 + individual return, minus 1
+        onePlusX_df = X.copy()  +1
+        trans = onePlusX_df.cumprod()-1
+        
+        return trans
+
+
+    def fit(self, X, y=None, **params):
+        """ Do nothing function
+        
+        Parameters
+        ----------
+        X : pandas DataFrame
+        y : default None
+                
+        
+        Returns
+        ----------
+        self  
+        """
+        return self
+
     
 
           

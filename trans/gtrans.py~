@@ -3,13 +3,82 @@ import pandas as pd
 
 import datetime as dt
 import os
+import re
 
 from sklearn.base import TransformerMixin, BaseEstimator, clone
 from sklearn.pipeline import Pipeline, make_pipeline
 
-import re
+from trans.data import GetData
+
+
 
 idx = pd.IndexSlice
+
+def good_housekeeping(X, **params):
+    """
+    Make sure the row and column indices of DataFrame X are sorted:
+
+    Parameters
+    ----------
+    X: DataFrame
+
+    Returns
+    ----------
+    trans: DataFrame
+    """
+
+    if params and ("inplace" in params) and params["inplace"] == True:
+        inplace = True
+        trans = X
+    else:
+        inplace = False
+        trans = X.copy()
+
+    # Always a good idea to sort after altering an index (either axis)
+    trans.sort_index(axis=0, inplace=True)
+
+    if isinstance(trans.columns, pd.MultiIndex):
+        # Always a good idea to sort columns
+        # NOTE: sortlevel is deprecated, use sort_index with axis=1
+        trans.sort_index(axis=1, level=0, inplace=True)
+        trans.sort_index(axis=1, level=1, inplace=True)
+    else:
+        trans.sort_index(axis=1, inplace=True)
+
+    return trans
+
+
+"""
+Common patterns:
+
+- Get wide DataFrame with raw data for multiple tickers:
+   price_df = GetDataTransformer(sector_tickers, cal_ticker="SPY").fit_transform( pd.DataFrame())
+
+- Convert price DataFrame to returns DataFrame
+   pct_df   = make_pipeline(GenSelectAttrsTransformer(['Adj Close'], dropSingle=False),
+                            # DatetimeIndexTransformer("Dt")
+                            # RestrictToCalendarColTransformer( ("Adj Close", "SPY") ),
+                            pctTrans,
+                            GenRenameAttrsTransformer(lambda col: "Pct", level=0)
+                          ).fit_transform(price_df)
+
+   price_df obtained from GetDataTransformer;
+   - index is already DateTime so no need for DatetimeIndexTransformer("Dt")
+   - common cal_ticker, so no need for RestrictToCalendarColTransformer
+   - renames "Adj Close" attribute to "Pct"
+
+- Convert price DataFrame to returns DataFrame (alternate method):
+   pct_df   = make_pipeline(GenSelectAttrsTransformer(['Adj Close'], dropSingle=True), 
+                            # RestrictToCalendarColTransformer( "SPY" ),
+                            pctTrans,
+                            # DatetimeIndexTransformer("Dt"),
+                            # RestrictToNonNullTransformer("all"),
+                            AddAttrTransformer('Pct')
+                          ).fit_transform(price_df)
+
+   like the above, but first drops the MultiIndex, only to add an attribute (level) at end via AddAttrTransformer
+
+"""
 
 class SelectColumnsTransformer(BaseEstimator, TransformerMixin):
     """ A DataFrame transformer that provides column selection
@@ -88,6 +157,7 @@ class DataFrameFunctionTransformer(BaseEstimator, TransformerMixin):
         X : DataFrame
             
         Returns
+nulpass
         ----------
         trans : pandas DataFrame
             Transformation of X 
@@ -354,7 +424,9 @@ class GenRenameAttrsTransformer(BaseEstimator, TransformerMixin):
     
     Parameters
     ----------
-    None
+    func: function to map name of existing attribute to new attribute name
+    **init_params: additional arguments to pandas.set_levels or pandas.rename, e.g., level=0
+
     
     """
     def __init__(self, func, **init_params):
@@ -941,7 +1013,8 @@ class GenRetAttrTransformer(BaseEstimator, TransformerMixin):
 
 class GenRankEndOfPeriodAttrTransformer(BaseEstimator, TransformerMixin):
     """ 
-    A DataFrame transformer that provides relative changes in an Attribute
+    A DataFrame transformer that provides a ranking -- at each end-of-period -- across an attribute
+    e.g., rank cross-section of monthly returns
     
     Parameters
     ----------
@@ -967,7 +1040,7 @@ class GenRankEndOfPeriodAttrTransformer(BaseEstimator, TransformerMixin):
         
         Parameters
         ----------
-        X : pandas DataFrame (ignored)
+        X : pandas DataFrame (only X.index is used: to give the result the same index as X)
             
         Returns
         ----------
@@ -980,24 +1053,21 @@ class GenRankEndOfPeriodAttrTransformer(BaseEstimator, TransformerMixin):
         dest_attr = self.dest_attr
         rank_df = self.rank_df
 
-        # The ranks computed at end of period are used for the FOLLOWING period. Shift forward one period
-        shift_pl = make_pipeline( ShiftTransformer(1) )
-        rank_shift_df = shift_pl.fit_transform( rank_df )
-
+ 
+        # The ranks computed for period p (spanning dates ( end_date_period(p-1)+1: end_date_period(p) ) are applied to forward to period (p+1) spanning dates (end_date_period(p)+1: end_date_period(p+1)
         # Convert the end of period frequency to the same index as X (usually, at daily frequency instead of end of period frequency)
-        rank_shift_daily_df = pd.concat(  [rank_shift_df,  pd.DataFrame(index=X.index) ], axis=1 )
+        rank_daily_df = pd.concat(  [rank_df,  pd.DataFrame(index=X.index) ], axis=1 )
 
         # Always a good idea to sort after altering an index (either axis)
-        rank_shift_daily_df.sortlevel(axis=0, inplace=True)
-        rank_shift_daily_df.sortlevel(axis=1, inplace=True)
+        good_housekeeping(rank_daily_df, inplace=True)
+        
+        # We now push the ranks for period p forward one day (i.e., to end_date_period(p)+1.) and forward fill. Result attribute is dest_attr
+        fill_pl = make_pipeline( ShiftTransformer(1),
+                                 FillNullTransformer(method="ffill"),
+                                 AddAttrTransformer( dest_attr )
+        )
 
-
-        # We now have the ranks, pushed forward to end of following period.  Backfill daily for the entire month. Result attribute is dest_attr
-        bfill_pl = make_pipeline( FillNullTransformer(method="bfill"),
-                                  AddAttrTransformer( dest_attr )
-                                  )
-
-        rank_shift_daily_df = bfill_pl.fit_transform( rank_shift_daily_df )
+        rank_shift_daily_df = fill_pl.fit_transform( rank_daily_df )
 
         trans = rank_shift_daily_df
 
@@ -1046,9 +1116,13 @@ class GenRankEndOfPeriodAttrTransformer(BaseEstimator, TransformerMixin):
 class GenRankToPortRetTransformer(BaseEstimator, TransformerMixin):
     """ 
     A DataFrame transformer that computes a portfolio return based on ranks
+
     We will compute a weights attribute wt_attr, based on the ranks (rank_attr of the rank_df DataFrame: rank_df.loc[:, idx[rank_attr,:] ])
     The weights will multiply the data (src_attr of the transform source DataFrame X: X.loc[:, idx[src_attr,:] ] )
     The portfolio return (weighted sum of products) will be stored in column dest_col with attribute src_attr
+
+    The weights are computed from the ranks by the function rank_to_wt_func,
+    e.g., lambda s: (s >= hi_rank) * 1.0 + (s <= lo_rank) * -1.0
     
     Parameters
     ----------
@@ -1063,14 +1137,23 @@ class GenRankToPortRetTransformer(BaseEstimator, TransformerMixin):
     Returns:
     trans: DataFrame with attributes (wt_attr, src_attr)
       trans[:, idx[wt_attr,;]]  will contain the weights, based on ranks
+      trans[:, idx[src_attr,:]] will contain the weighted returns, plus the sum of the weighted returns
+        trans[:, idx[src_attr, dest_col] ]: simple sum of weighted returns.  Note the weights don't necessary sum up to anything in particular (e.g., neither 100 nor 0)
+        trans[:, idx[src_attr, dest_col + " > 0"] ]: sum of weighted returns, where weights are > 0, divided by sum(weights > 0). This is a true return for an equally weighted long portfolio
+        trans[:, idx[src_attr, dest_col + " < 0"] ]: sum of weighted returns, where weights are < 0, divided by sum(weights < 0). This is a true return for an equally weighted short portfolio
+        trans[:, idx[src_attr, dest_col + " net"] ]: sum of the long and short returns = trans[:, idx[src_attr, dest_col + " > 0"] ] + trans[:, idx[src_attr, dest_col + " < 0"] ]
+          This is the difference between a long portfolio worth 1 and short portfoli worth 1
+
+
+ at trans[:, idx[src_attr, dest_col]]
       trans[:, idx[src_attr,:]] will contain the weighted returns, plus the sum of the weighted returns at trans[:, idx[src_attr, dest_col]]
     
     """
     
-    def __init__(self, src_attr, rank_df, rank_attr, wt_attr, dest_col):
+    def __init__(self, src_attr, rank_df, rank_attr, rank_to_wt_func, wt_attr, dest_col):
         self.src_attr = src_attr
-        self.rank_df = rank_df
-        self.rank_attr = rank_attr
+        self.rank_df, self.rank_attr, self.rank_to_wt_func = rank_df, rank_attr, rank_to_wt_func
+        
         self.wt_attr = wt_attr
         self.dest_col = dest_col
 
@@ -1098,14 +1181,27 @@ class GenRankToPortRetTransformer(BaseEstimator, TransformerMixin):
         ret_pl = make_pipeline( GenSelectAttrsTransformer( [ src_attr ], dropSingle=True ) )
         ret_df = ret_pl.fit_transform( X )
 
-        # Compute weighted returns
-        wt_ret_df = wt_df * ret_df
+        # Compute number of positively/negatively weighted items
+        pos_cnt_series = (wt_df > 0).sum(axis=1)
+        neg_cnt_series = (wt_df < 0).sum(axis=1)
 
-        # Portfolio return is sum of the weighted returns
-        sum_series = wt_ret_df.sum(axis=1)
+        # Compute weighted returns
+        wt_ret_df  = wt_df * ret_df
+        sum_series =  wt_ret_df.sum(axis=1)
+
+        # NOTE: Number of positively and negatively weighted items may not be the same, so net_ret_series NOT necessarily same as sum_series
+        pos_ret_series = ((wt_df > 0) * wt_ret_df).sum(axis=1)/pos_cnt_series
+        neg_ret_series = ((wt_df < 0) * wt_ret_df).sum(axis=1)/neg_cnt_series
+
+        # Net is addition (since neg_ret_series has negative weights)
+        net_ret_series = pos_ret_series + neg_ret_series
+
 
         # Add the Portfolio Return to the weighted returns df
         wt_ret_df.loc[:, dest_col ] = sum_series
+        wt_ret_df.loc[:, dest_col + " > 0"] = pos_ret_series
+        wt_ret_df.loc[:, dest_col + " < 0"] = neg_ret_series
+        wt_ret_df.loc[:, dest_col + " net"] = net_ret_series
 
         # Return df:
         trans_pl = DataFrameConcat( [ wt_df, wt_ret_df ], df_keys=[ wt_attr, src_attr ] )
@@ -1128,10 +1224,11 @@ class GenRankToPortRetTransformer(BaseEstimator, TransformerMixin):
         self  
         """
 
-        rank_df, rank_attr = self.rank_df, self.rank_attr
+        rank_df, rank_attr, rank_to_wt_func = self.rank_df, self.rank_attr, self.rank_to_wt_func
         
         hi_rank, lo_rank = 5, 1
-        hmlWtTrans = DataFrameFunctionTransformer(func = lambda s: (s >= hi_rank) * 1.0 + (s <= lo_rank) * -1.0)
+        # hmlWtTrans = DataFrameFunctionTransformer(func = lambda s: (s >= hi_rank) * 1.0 + (s <= lo_rank) * -1.0)
+        hmlWtTrans = DataFrameFunctionTransformer(func = rank_to_wt_func)
         
         wt_pl = make_pipeline( GenSelectAttrsTransformer( [ rank_attr ], dropSingle=True),
                                hmlWtTrans
@@ -1143,3 +1240,204 @@ class GenRankToPortRetTransformer(BaseEstimator, TransformerMixin):
         
         return self
     
+class GetDataTransformer(BaseEstimator, TransformerMixin):
+    """ 
+    A DataFrame transformer that gets raw data (from files) of multiple tickers, and assembles into a wide DataFrame
+    
+    Parameters
+    ----------
+    tickers: list of tickers to get
+    cal_ticker: ticker whose dates will be used as the common "calendar"
+
+    Returns:
+    trans: DataFrame, with index the same as cal_ticker (i.e., cal_ticker's index is used as the common index -- the "calendar")
+    - trans.index   will be of type index.DateTimeIndex and named "Dt"
+    - trans.columns will be a MultiIndex.
+    -- the attributes will be the headers within the files
+    -- the second level will be the tickers
+    -- rows that are all null will be elimnated (n.b., should be no such rows since the cal_ticker column should never be empty ?)
+    
+    """
+    
+    def __init__(self, tickers, cal_ticker=None):
+        # Use GetData to obtain the data
+        gd = GetData()
+        self.gd = gd
+        
+        # Default for tickers are all existing files
+        if not tickers:
+            tickers = gd.existing()
+
+        # Make sure cal_ticker is in tickers
+        if not cal_ticker in tickers:
+            # Make a copy of tickers since .insert modifies
+            tickers = list(tickers)
+            tickers.insert(0, cal_ticker)
+            
+        self.tickers, self.cal_ticker = tickers, cal_ticker
+
+
+    def transform(self, X, **transform_params):
+        """ 
+        Gets the data for all tickers, converts index to DateTime, restricts index to those dates present in cal_ticker
+        
+        Parameters
+        ----------
+        X : pandas DataFrame (ignored)
+            
+        Returns
+        ----------
+        
+        trans : DataFrame
+
+        """
+
+        cal_ticker =self.cal_ticker
+
+        # Pipeline to convert index to DateTime and restrict it to the dates that cal_ticker has data
+        pipe_d = make_pipeline( DatetimeIndexTransformer("Dt"),
+                                RestrictToCalendarColTransformer( ("Adj Close", cal_ticker)),
+                                RestrictToNonNullTransformer("all")
+                                )
+
+        trans = pipe_d.fit_transform( self.df )
+                
+        return trans
+        
+ 
+    def fit(self, X, y=None, **fit_params):
+        """ 
+        Get the data for the tickers in self.tickers
+        
+        Parameters
+        ----------
+        X : pandas DataFrame
+        y : default None
+                
+        
+        Returns
+        ----------
+        self  
+        """
+
+        gd = self.gd
+        df = gd.combine_data( self.tickers )
+
+        self.df = df
+        
+        return self
+    
+
+class SklearnPreproccessingTransformer(BaseEstimator, TransformerMixin):
+    """
+    Applies an sklearn.preprocessing transformation "transformer".
+
+    Issue: sklearn takes pandas as inputs, but the transformations lose all index and column info.  This object preserves it.
+    """
+
+    def __init__(self, transformer, **init_params):
+          self.transformer = transformer
+          self.init_params = init_params
+
+
+    def transform(self, X, y=None, **params):
+        """ 
+        Apply self.transformer.transform to X
+        
+        Parameters
+        ----------
+        X : pandas DataFrame
+                
+        
+        Returns
+        ----------
+        trans: DataFrame of transformed data 
+        """
+
+        transformer = self.transformer
+
+        # Apply the transform method
+        trans = pd.DataFrame( transformer.transform(X, **params))
+
+        # The resulting DataFrame should have the same index and columns as its input
+        trans.index = X.index
+        trans.columns = X.columns
+
+        # Always a good idea to sort after altering an index (either axis)
+        good_housekeeping(trans, inplace=True)
+
+        return trans
+
+
+
+    def fit(self, X, y=None, **params):
+        """ 
+        Fit self.transformer.fit to X
+        
+        Parameters
+        ----------
+        X : pandas DataFrame
+                
+        
+        Returns
+        ----------
+        self  
+        """
+
+        # The "fit" method of self.transformer may (and usually does) modify self.transformer
+        #   The typical way is to store fitting parameters (fit from the training data) that can be applied via self.transform to non-training data
+        transformer = self.transformer
+        transformer.fit(X, params)
+        
+        return self
+    
+
+          
+class CumRetTransformer(BaseEstimator, TransformerMixin):
+    """
+    Computes cumulative returns of columns
+    """
+
+    def __init__(self,  **init_params):
+        return
+
+
+    def transform(self, X, y=None, **params):
+        """ 
+        Apply self.transformer.transform to X
+        
+        Parameters
+        ----------
+        X : pandas DataFrame
+                
+        
+        Returns
+        ----------
+        trans: DataFrame, in which columns are cumulative returns of X
+        """
+
+        # Cumulative return is running product of 1 + individual return, minus 1
+        onePlusX_df = X.copy()  +1
+        trans = onePlusX_df.cumprod()-1
+        
+        return trans
+
+
+    def fit(self, X, y=None, **params):
+        """ Do nothing function
+        
+        Parameters
+        ----------
+        X : pandas DataFrame
+        y : default None
+                
+        
+        Returns
+        ----------
+        self  
+        """
+        return self
+
+    
+
+          

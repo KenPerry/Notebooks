@@ -121,6 +121,11 @@ univ.sort()
 len(univ)
 
 
+# # Create the ranks
+# ## n.b., the ranks are based on period returns (period_ret_attr of the period_ret_df) but the period ranks are pushed forward (ffill) into the daily daily_ret_df
+# ###      so next_period_rank_df is of daily frequency, and the rank for day d is the rank for the period end date preceding d
+# ###      i.e., the rank is computed based on period returns as of the preceding end date, and then pushed forward daily into the next period
+
 # In[14]:
 
 next_period_rank_pl = GenRankEndOfPeriodAttrTransformer(

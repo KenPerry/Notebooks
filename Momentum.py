@@ -13,8 +13,6 @@ get_ipython().magic('autoreload 1')
 
 # In[2]:
 
-from trans.verify_tools import *
-
 import pandas as pd
 idx = pd.IndexSlice
 
@@ -36,20 +34,7 @@ from trans.reg import Reg, RegAttr
 from trans.regpipe import RegPipe
 
 
-# In[4]:
-
-import trans.qfactors as qf
-
-from trans.date_manip import Date_Manipulator
-
-
-# ## Create momentum object; define universe and time range
-
-# In[5]:
-
-universe = [ "FB", "AAPL", "AMZN", "NFLX", "GOOG"]
-
-mom = qf.MomentumPipe(universe)
+# In[3]:
 
 start = dup.parse("01/01/2017")
 end =   dup.parse("03/15/2018")
@@ -57,51 +42,115 @@ end =   dup.parse("03/15/2018")
 start, end
 
 
-# ## Load prices
+# In[4]:
+
+import trans.qfactors as qf
+
+from trans.date_manip import Date_Manipulator
+
+
+# ## Define the universe
+
+# In[5]:
+
+universe = gd.get_r1000_tickers()
+len(universe)
+universe = [ "FB", "AAPL", "AMZN", "NFLX", "GOOG"]
+
 
 # In[6]:
+
+mom = qf.MomentumPipe(universe)
+
+
+# ## Memorialize: save intermediate data as "blessed" output
+
+# In[7]:
+
+memorialize = False
+#memorialize = True
+
+
+# ## Load prices
+
+# In[8]:
 
 price_df = mom.load_prices( start, end)
 
 
-# In[ ]:
+# In[9]:
+
+if memorialize:
+    gd.save_data(price_df.loc[:, "Adj Close"], "verify_mom_raw_df.pkl")
+    
+
+
+# ## Set period-end dates
+# ### end-of-month dates, subject to those dates being in price_df.index
+
+# In[10]:
 
 dm = Date_Manipulator( mom.price_df.index )
+
+
+# In[11]:
+
 eom_in_idx = dm.periodic_in_idx_end_of_month(end)
 mom.set_endDates( eom_in_idx )
 
 
-# ## Create daily returns (needed to construct daily factor series)
+# ## Create daily returns
+# ### Needed to create the daily factor series
 
-# In[ ]:
+# In[12]:
 
 price_attr = "Adj Close"
 ret_attr = "Ret"
 daily_ret_df = mom.create_dailyReturns(price_attr, ret_attr )
 
 
-# ## Create period returns (this is what is used for ranking)
+# ## Create period returns
+# ### Needed to create the ranks
 
-# In[ ]:
+# In[13]:
 
 period_ret_attr = ret_attr + " yearly"
 yearly_ret_df = mom.create_periodReturns(price_attr, period_ret_attr, periods=12 )
 
 
-# ## Create ranks
-# - first create end-of-period ranks, using period returns
-# - change to daily frequency.  Push the end-of-period ranks forward one day
-# - forward fill the ranks daily so perior period end-of-period rank is pushed to all days of subsequent period
+# In[14]:
 
-# In[ ]:
+if memorialize:
+    gd.save_data(daily_ret_df,  "verify_mom_daily_ret_df.pkl")
+    gd.save_data(yearly_ret_df, "verify_mom_yearly_ret_df.pkl")
+    
+
+
+# ## Create ranks
+# ### Ranks are based on self.period_ret_df, calculated on each period-end date
+# ### These ranks are then applied in the subsequent period, on a daily basis
+# ### i.e.,  shifted one-day forward  and then forward filled dail
+# 
+
+# In[15]:
 
 daily_rank_df = mom.create_ranks()
 
 
-# ## Create the factor returns, using the daily ranks
-
-# In[ ]:
+# In[16]:
 
 factor_ret_attr = ret_attr + " Factor"
 factor_df = mom.create_factor()
+
+
+# In[17]:
+
+if memorialize:
+    gd.save_data(daily_rank_df, "verify_mom_daily_rank_df.pkl")
+    gd.save_data(factor_df,     "verify_mom_factor_df.pkl")
+
+
+# In[18]:
+
+factor_df.tail()
 
