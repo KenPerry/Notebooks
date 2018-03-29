@@ -130,7 +130,7 @@ ax.legend( (bars_pc0, bars_pc1), [ "PC {:d}".format(i) for i in np.arange(2)])
 sector_residuals.head()
 
 
-# In[11]:
+# In[12]:
 
 get_ipython().magic('aimport trans.pca')
 import trans.pca as pct
@@ -140,13 +140,13 @@ pco = pct.PrincipalComp(sector_residuals, )
 pca_df = pco.singlePCA()
 
 
-# In[12]:
+# In[13]:
 
 pca_df.head()
 pca_df.index
 
 
-# In[13]:
+# In[14]:
 
 s_df = pca_df.loc[:, idx[ ["PC 0", "PC 1"],:]].stack()
 s_df

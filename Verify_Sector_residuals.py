@@ -186,14 +186,22 @@ resid_stack = rstack.repeated()
 rstack.done()
 
 
-# In[14]:
+# In[20]:
 
 v_stack = gd.load_data("verify_resid_stack.pkl")
+v_stack_new = gd.load_data("verify_resid_stack_after_class.pkl")
+
+
+# In[23]:
+
+(v_label_new, v_df_new) = v_stack_new[0]
+v_label_new
+v_df.equals(v_df_new)
 
 
 # ### Verify single regression matches first element of stack
 
-# In[15]:
+# In[21]:
 
 (v_label, v_df) = v_stack[0]
 verify_df(sector_residuals, v_df)
