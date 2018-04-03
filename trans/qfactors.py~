@@ -143,25 +143,46 @@ class MomentumPipe:
 
         return next_period_rank_df
 
-    def create_factor(self, factor_ret_attr=None):
+    def create_factor(self, **params):
         daily_ret_df = self.daily_ret_df
         daily_ret_attr = self.daily_ret_attr
 
         daily_rank_df = self.daily_rank_df
         rank_attr     = self.rank_attr
 
-        if (not factor_ret_attr):
+        if "factor_ret_attr" in params:
+            factor_ret_attr = params[ "factor_ret_attr" ]
+        else:
             factor_ret_attr = daily_ret_attr + " Factor"
+
+        # Define the lower and upper fractions (of the defined ranks) for the short/long sub-portfolios
+        if "lowPct" in params:
+            low_frac = params[ "lowPct" ] * .01
+        else:
+            low_frac = 0.20
+
+        if "hiPct" in params:
+            hi_frac = params[ "hiPct" ] * .01
+        else:
+            hi_frac = 0.80
             
         wt_attr = "weight"
         portret_col = "Port"
-        hi_rank, lo_rank = 401, 100
 
+        # Define a function that assigns -1 to low ranks and +1 to hi ranks
+        def rank_func(s):
+            # Take upper/lower tail of DEFINED ranks
+            s_defined = s[ s.isnull() == False ]
+            size = s_defined.size
+
+            lo_rank, hi_rank = low_frac * size, hi_frac * size
+            return (s <= lo_rank) * -1 + (s > hi_rank)*1
+        
         portret_pl = make_pipeline(  GenRankToPortRetTransformer(
             daily_ret_attr,
             daily_rank_df,
             rank_attr,
-            lambda s: (s >= hi_rank) * 1.0 + (s <= lo_rank) * -1.0,
+            rank_func,
             wt_attr,
             portret_col
         )

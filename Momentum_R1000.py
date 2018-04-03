@@ -127,26 +127,34 @@ shifted_yearly_ret_df.loc["2017-12-01":"2018-03-20", idx[ period_ret_attr, "NFLX
 daily_rank_df = mom.create_ranks()
 
 
-# In[13]:
+# In[37]:
+
+s = daily_rank_df.loc["2018-03-01", idx["Rank",:]]
+s_defined = s[ s.isnull() == False ]
+size = s_defined.size
+size
+
+
+# In[25]:
 
 factor_ret_attr = ret_attr + " Factor"
 factor_df = mom.create_factor()
 
 
-# In[29]:
+# In[26]:
 
 f_ret = factor_df.loc[:, idx["Ret", "Port net"]]
-f_ret.loc["2018-01-23":]
+f_ret.loc["2018-01-01":]
 
 
 # ## Standard deviation computed over last year
 
-# In[37]:
+# In[27]:
 
 std_dev = f_ret.loc[end - dt.timedelta(days=365) :].std()
 
 
-# In[40]:
+# In[28]:
 
 get_ipython().magic('matplotlib inline')
 f_ret_recent = f_ret.loc["2018-01-01":]
@@ -156,17 +164,32 @@ f_ret_recent_z = f_ret_recent/std_dev
 f_ret_recent_z.plot()
 
 
-# In[42]:
+# In[29]:
 
 gd.save_data(factor_df, "mom_r1000_12m1m.pkl")
 
 
-# In[43]:
+# In[30]:
 
 factor_df.to_csv("mom_r1000_12m1m.csv")
 
 
-# In[44]:
+# In[31]:
 
 f_ret_recent_z.tail()
+
+
+# In[39]:
+
+s = daily_rank_df.loc["2018-03-01", idx["Rank",:]]
+s_defined = s[ s.isnull() == False ]
+size = s_defined.size
+size
+
+row = factor_df.loc["2018-03-01", idx[ "weight",:]]
+
+size
+size * 0.20
+row[ row < 0].sum()
+row[ row > 0].sum()
 
