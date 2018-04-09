@@ -34,13 +34,13 @@ gd = GetData()
 
 # ## Issue: webreader returns index as datetime; writing to csv converts it to object, so when concatenatin the two we get datetime
 
-# In[24]:
+# In[5]:
 
 existing_tickers = gd.existing()
 len(existing_tickers)
 
 
-# In[25]:
+# In[6]:
 
 existing_tickers.sort()
 len(existing_tickers)
@@ -54,7 +54,7 @@ today
 
 # ## In case we have damaged the files with duplicates: clean them up
 
-# In[22]:
+# In[8]:
 
 from trans.data import GetData
 get_ipython().magic('aimport trans.data')
@@ -62,7 +62,7 @@ gd = GetData()
 cleaned = gd.clean_data( existing_tickers )
 
 
-# In[23]:
+# In[9]:
 
 len(cleaned)
 
@@ -73,12 +73,12 @@ r1000 = gd.get_r1000_tickers()
 len(r1000)
 
 
-# In[26]:
+# In[10]:
 
 changed_tickers = gd.get_data( existing_tickers, start, today )
 
 
-# In[27]:
+# In[11]:
 
 len(changed_tickers)
 

@@ -1249,6 +1249,12 @@ class GetDataTransformer(BaseEstimator, TransformerMixin):
     tickers: list of tickers to get
     cal_ticker: ticker whose dates will be used as the common "calendar"
 
+    (optional):
+    start: DateTime start of data date
+    end:   DateTime start of data date
+
+    dataStore: a DateStore object to fetch the data (defaults to GetData(), which is not (yet) a DataStore oject but implements the correct signatures)
+
     Returns:
     trans: DataFrame, with index the same as cal_ticker (i.e., cal_ticker's index is used as the common index -- the "calendar")
     - trans.index   will be of type index.DateTimeIndex and named "Dt"
@@ -1259,9 +1265,14 @@ class GetDataTransformer(BaseEstimator, TransformerMixin):
     
     """
     
-    def __init__(self, tickers, cal_ticker=None):
+    def __init__(self, tickers, cal_ticker=None, start=None, end=None, **params):
         # Use GetData to obtain the data
-        gd = GetData()
+        if "dataStore" in params:
+            gd = params["dataStore"]
+            print("dataStore passed")
+        else:
+            gd = GetData()
+            
         self.gd = gd
         
         # Default for tickers are all existing files
@@ -1275,6 +1286,7 @@ class GetDataTransformer(BaseEstimator, TransformerMixin):
             tickers.insert(0, cal_ticker)
             
         self.tickers, self.cal_ticker = tickers, cal_ticker
+        self.start, self.end = start, end
 
 
     def transform(self, X, **transform_params):
@@ -1321,7 +1333,7 @@ class GetDataTransformer(BaseEstimator, TransformerMixin):
         """
 
         gd = self.gd
-        df = gd.combine_data( self.tickers )
+        df = gd.combine_data( self.tickers, start=self.start, end=self.end )
 
         self.df = df
         

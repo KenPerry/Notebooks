@@ -1228,7 +1228,7 @@ class GenRankToPortRetTransformer(BaseEstimator, TransformerMixin):
         
         hi_rank, lo_rank = 5, 1
         # hmlWtTrans = DataFrameFunctionTransformer(func = lambda s: (s >= hi_rank) * 1.0 + (s <= lo_rank) * -1.0)
-        hmlWtTrans = DataFrameFunctionTransformer(func = rank_to_wt_func)
+        hmlWtTrans = DataFrameFunctionTransformer(func = rank_to_wt_func, axis=1)
         
         wt_pl = make_pipeline( GenSelectAttrsTransformer( [ rank_attr ], dropSingle=True),
                                hmlWtTrans
@@ -1259,9 +1259,14 @@ class GetDataTransformer(BaseEstimator, TransformerMixin):
     
     """
     
-    def __init__(self, tickers, cal_ticker=None):
+    def __init__(self, tickers, cal_ticker=None, **params):
         # Use GetData to obtain the data
-        gd = GetData()
+        if "dataStore" in params:
+            gd = params["dataStore"]
+            print("dataStore passed")
+        else:
+            gd = GetData()
+            
         self.gd = gd
         
         # Default for tickers are all existing files

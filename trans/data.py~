@@ -18,6 +18,7 @@ from sklearn.base import TransformerMixin, BaseEstimator, clone
 from sklearn.pipeline import Pipeline, make_pipeline
 
 import re
+import PyPDF2
 
 idx = pd.IndexSlice
 
@@ -90,6 +91,75 @@ class GetData:
 
         return tickers
 
+    def get_r1000_tickers(self, reload=False):
+        """
+        Get the list of current tickers in the Ruell 1000, using cached results if available
+
+        Returns:
+        list of tickers
+        """
+
+        file = "r1000tickers.pickle"
+
+        if reload or not os.path.exists(file):
+            tickers = self.save_r1000_tickers()
+        else:
+            with open(file,"rb") as f:
+                tickers = pickle.load(f)
+
+        return tickers
+
+    def save_r1000_tickers(self):
+        """
+        Get the list of current tickers in the Rusell 1000
+
+        The tickers are obtained from the PDF at ftserussell.com/memberhip-russell-com
+
+        Returns:
+        list of tickers
+        """
+
+        # file_pdf is downloaded from the above URL
+        file_pdf = "/home/ubuntu/Downloads/ru1000_membershiplist_20160627.pdf"
+
+        tickers = []
+    
+        pdfFileObj = open(file_pdf, 'rb')
+        pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
+
+        # Extract from each page
+        for page in range( pdfReader.numPages):
+            pageObj = pdfReader.getPage(page)
+            line_num = 0
+
+            text = pageObj.extractText()
+
+            # Split the text into lines, and process each line
+            for line in text.split("\n"):
+                line_num  += 1
+                line = line.rstrip(" ")
+
+                # Tickers are no longer than 4 characters
+                if ( len(line) == 0 or len(line) > 4):
+                    continue
+
+                # Tickers are not all digits
+                if ( re.search("^\d+$", line) ):
+                     continue
+
+                # Tickers come from a limited character set
+                if ( not re.search("^[A-Z\.]+$", line) ):
+                    continue
+
+                # Lines alternate: description, tickers
+                if ( line_num % 2 == 0 ):
+                    tickers.append(line)
+                 
+        with open("r1000tickers.pickle","wb") as f:
+            pickle.dump(tickers,f)
+
+        return tickers
+
     def get_one(self, ticker, start, end):
         """
         Get data from Web for single ticker for date range from start to end
@@ -114,6 +184,9 @@ class GetData:
         while( (tries < 2) and not succeed):
             try:
                 df = web.DataReader(ticker, "yahoo", start, end)
+
+                # Duplicates are returned sometimes.  Drop them
+                df.drop_duplicates(inplace=True)
 
                 succeed = True
             except Exception as e:
@@ -278,6 +351,7 @@ class GetData:
                     changed = True
 
                 if changed:
+                    df_new.set_index('Date', inplace=True)
                     df_new.to_csv('stock_dfs/{}.csv'.format(ticker))
 
                     cleaned.append(ticker)

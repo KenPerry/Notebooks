@@ -185,6 +185,9 @@ class GetData:
             try:
                 df = web.DataReader(ticker, "yahoo", start, end)
 
+                # Duplicates are returned sometimes.  Drop them
+                df.drop_duplicates(inplace=True)
+
                 succeed = True
             except Exception as e:
                 tries += 1
@@ -374,7 +377,7 @@ class GetData:
                 
         return tickers
 
-    def combine_data(self, tickers=None):
+    def combine_data(self, tickers=None, start=None, end=None):
         """
         Create one Dataframe, with data from all the tickers
         The Dataframe:

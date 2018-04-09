@@ -167,6 +167,12 @@ pct_df.tail()
 
 # In[16]:
 
+from dateutil.relativedelta import relativedelta, FR
+lastFriday = today + relativedelta(weekday=FR(-1))
+
+
+# In[17]:
+
 import dateutil.parser as dup
 import dateutil.relativedelta as rd
 
@@ -174,11 +180,13 @@ regWindow = rd.relativedelta(months=+6)
 regStep   = rd.relativedelta(weeks=+4)
 
 regStart = dup.parse("01/01/2000")
-regEnd   = dup.parse("12/29/2017")
+regEnd = lastFriday
+if Memorialize:
+    regEnd   = dup.parse("12/29/2017")
 # regEnd   = dup.parse("02/28/2018")
 
 
-# In[17]:
+# In[18]:
 
 regParams = { "start": regStart, "end": regEnd, "window": regWindow, "step": regStep }
 if Memorialize:
@@ -188,14 +196,14 @@ if Memorialize:
 # ## Compute the model: 
 # $Return_{sector ticker} = \beta_0 + \beta * Return_{SPY} + \epsilon$
 
-# In[18]:
+# In[19]:
 
 rp = RegPipe( pct_df )
 rp.indCols( [ idx["Pct", "SPY"] ] )
 rp.regress( regStart, regEnd, regWindow, regStep)
 
 
-# In[19]:
+# In[20]:
 
 rp.beta_df.shape
 rp.beta_df.tail()
@@ -205,7 +213,7 @@ rp.beta_df.tail()
 #  - For residual, don't roll beta: the date of the beta is the last date of the regression window
 #  - Fill the beta backwards, so the in-sample beta is applied
 
-# In[20]:
+# In[21]:
 
 rollAmount = 0
 fillMethod = "bfill"
@@ -213,7 +221,7 @@ fillMethod = "bfill"
 rp.attrib_setup(pct_df, rp.beta_df, rollAmount, fillMethod)
 
 
-# In[21]:
+# In[22]:
 
 rp.attrib()
 
@@ -223,7 +231,7 @@ rp.retAttr_df.loc[:"2017-12-29",:].tail()
 
 # ## Demonstrate a non-rolling
 
-# In[22]:
+# In[23]:
 
 regStarts = regEnd - regWindow + timedelta(days=1)
 
@@ -237,13 +245,13 @@ rps.beta_df.shape
 rps.beta_df.tail()
 
 
-# In[23]:
+# In[24]:
 
 if Memorialize:
     gd.save_data( rps.beta_df, "verify_beta_df.pkl")
 
 
-# In[24]:
+# In[25]:
 
 rollAmount = 0
 fillMethod = "bfill"
@@ -255,26 +263,26 @@ rps.retAttr_df.shape
 rps.retAttr_df.loc[:"2017-12-29",:].tail()
 
 
-# In[25]:
+# In[26]:
 
 sector_residuals = rps.retAttr_df.loc[:, idx["Error",:]]
 sector_residuals.tail()
 
 
-# In[26]:
+# In[27]:
 
 if Memorialize:
     gd.save_data(sector_residuals, "sector_residuals.pkl")
 
 
-# In[27]:
+# In[28]:
 
 resStart = dup.parse("01/01/2016")
 
 
 # ## OBSOLETE, replaced by trans.stack_residual
 
-# In[28]:
+# In[29]:
 
 from trans.stack import Stack
 get_ipython().magic('aimport trans.stack')
@@ -283,7 +291,7 @@ s = Stack(pct_df)
 stack = s.repeated(resStart, regEnd, regWindow, regStep)
 
 
-# In[29]:
+# In[30]:
 
 for stk in stack :
     suffix = stk[0].strftime("%Y%m%d")
@@ -297,7 +305,7 @@ for stk in stack :
 
 # ## Residual stack
 
-# In[30]:
+# In[31]:
 
 get_ipython().magic('aimport trans.stacked.residual')
 from trans.stacked.residual import Residual
@@ -308,13 +316,13 @@ resid_stack = rstack.repeated()
 rstack.done()
 
 
-# In[31]:
+# In[32]:
 
 if Memorialize:
     gd.save_data( resid_stack, "verify_resid_stack.pkl")
 
 
-# In[32]:
+# In[33]:
 
 for stk in resid_stack :
     suffix = stk[0].strftime("%Y%m%d")
@@ -326,7 +334,7 @@ for stk in resid_stack :
 
 # ## PCA stack
 
-# In[33]:
+# In[34]:
 
 get_ipython().magic('aimport trans.stacked.pca')
 
@@ -338,7 +346,7 @@ pca_stack = pstack.repeated()
 pstack.done()
 
 
-# In[34]:
+# In[35]:
 
 for stk in pca_stack :
     suffix = stk[0].strftime("%Y%m%d")
@@ -351,7 +359,7 @@ for stk in pca_stack :
 
 # ## Composed (residual, PCA) stack
 
-# In[35]:
+# In[36]:
 
 get_ipython().magic('aimport trans.stacked.pipeline')
 
@@ -369,15 +377,78 @@ pl_stack = plstack.repeated()
 plstack.done()
 
 
-# In[36]:
+# In[70]:
 
-for stk in pl_stack :
+get_ipython().magic('pinfo plt.figure')
+
+
+# In[87]:
+
+get_ipython().magic('matplotlib inline')
+
+import matplotlib.pyplot as plt
+
+# plotStack is the subset of PCA's that will be plotted
+plotStack = pl_stack[0:4]
+numRows = int(len(plotStack)/2)
+
+# Create a figure (collection of axes, one per plot, arranged in rows and columns)
+fig, axes = plt.subplots(nrows=numRows, ncols=2, sharex=True)
+
+# Set height, width (in inches) of figure
+fig.set_figheight(numRows * 4)
+fig.set_figwidth(12)
+
+plotNum = 0
+
+# Plot the PCA's
+for stk in plotStack :
     suffix = stk[0].strftime("%Y%m%d")
-    data = stk[1]
+    pca_df = stk[1]
     
     print("Stack {} shape: {}".format(stk[0], stk[1].shape))
+    
+    # Plot the first 2 PC's
+    s_df = pca_df.loc[:, idx[ ["PC 0", "PC 1"],:]].stack()
+    s_df.index = s_df.index.droplevel(0)
+    # s_df
+    
+    ax0, ax1 = int(plotNum/2), (plotNum % 2)
+    # print("({}, {})".format(ax0, ax1))
+    s_df.plot.bar(ax=axes[ ax0, ax1 ])
+    axes[ax0,ax1].set_title(stk[0].strftime("%m/%d/%Y"))
+    plotNum += 1
     #gd.save_data(data, "sector_residuals_{}.pkl".format(suffix))
     
+
+
+# ## Examine one PCA
+
+# In[38]:
+
+label, pca_df = pl_stack[14]
+label
+s_df = pca_df.loc[:, idx[ ["PC 0", "PC 1"],:]].stack()
+s_df
+s_df.plot.bar()
+
+
+# In[39]:
+
+u_df = pca_df.loc[ :, idx[ ["PC 0", "PC 1"], :]].unstack(level=1)
+u_df.index
+u_df = u_df.reset_index()
+u_df["ticker"] = u_df["level_1"].astype("category")
+u_df["PC num"] = u_df["level_0"].astype("category")
+u_df
+
+
+# In[40]:
+
+
+import seaborn as sns
+
+sns.barplot(x="ticker", hue="PC num", y=0,  data=u_df)
 
 
 # In[ ]:

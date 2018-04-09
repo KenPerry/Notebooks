@@ -32,51 +32,24 @@ from trans.gtrans import *
 from trans.reg import Reg, RegAttr
 from trans.regpipe import RegPipe
 
+from trans.verify_tools import *
+
 
 # ## Verify prices (GetDataTransformer)
 
 # In[3]:
 
-def verify_df(df, v_df, cols=None, debug=False, **params):
-    (min_d, max_d) = (v_df.index.min(), v_df.index.max())
-    if debug:
-        print("Verified df ({}, {}), shape {}".format(min_d, max_d, v_df.shape))
-        print(df.columns)
-        print(v_df.columns)
-    
-    # Output the verified df to a csv for hand-verification
-    v_df.to_csv("/tmp/verify.csv")
-    
-    if (not cols == None):
-        return df.loc[ min_d:max_d, cols].equals( v_df.loc[:, cols])
-    else:
-        return df.loc[ min_d:max_d, v_df.columns].equals( v_df.loc[:,:])
-
-    
-def verify_file(df, verified_df_file, cols=None, debug=False,**params):
-    """
-    Compare DataFrame to one that is stored in a file
-    
-    Parameters:
-    --------------
-    df: DataFrame
-    verified_df_file: string. Name of pkl file containing verified DataFrame
-    
-    Returns
-    --------
-    Boolean
-    """                   
-    v_df = gd.load_data(verified_df_file)
-    return verify_df(df, v_df)
-   
-
-
-# In[4]:
-
 regParams = gd.load_data("verify_regParams.pkl")
 (start, end, step, window) = list( map( lambda c: regParams[c], [ "start", "end", "step", "window" ]) )
 
 start, end
+
+
+# In[4]:
+
+import trans.datastore.odo as odb
+dburl = 'sqlite:////home/ubuntu/Notebooks/full.db'
+ds = odb.ODO(dburl, echo=True)
 
 
 # In[5]:
@@ -94,7 +67,11 @@ sector_tickers = ['SPY',
  'XTL',
  'XLU']
 
-price_df = GetDataTransformer(sector_tickers, cal_ticker="SPY").fit_transform( pd.DataFrame())
+price_df = GetDataTransformer(
+    sector_tickers, 
+    cal_ticker="SPY",
+    dataStore=gd
+).fit_transform( pd.DataFrame())
 
 
 # ## Price data seemed to change retroactively somewhere in 2012
@@ -186,22 +163,14 @@ resid_stack = rstack.repeated()
 rstack.done()
 
 
-# In[20]:
+# In[14]:
 
 v_stack = gd.load_data("verify_resid_stack.pkl")
-v_stack_new = gd.load_data("verify_resid_stack_after_class.pkl")
-
-
-# In[23]:
-
-(v_label_new, v_df_new) = v_stack_new[0]
-v_label_new
-v_df.equals(v_df_new)
 
 
 # ### Verify single regression matches first element of stack
 
-# In[21]:
+# In[15]:
 
 (v_label, v_df) = v_stack[0]
 verify_df(sector_residuals, v_df)
