@@ -1,0 +1,29 @@
+from datetime import timedelta
+
+"""
+Base class for DataProvicer
+
+"""
+
+class DataProviderBase:
+    def __init__(self, debug=False, **params):
+        self.Debug = debug
+
+
+    def modify_out(self, df):
+        return df
+
+    def get(self, tickers=None, start=None, end=None):
+        """
+        Create one Dataframe, with data from all the tickers
+        The Dataframe:
+        - index is Date (as a string, same as in the per-ticker files)
+        - columns: MultiIndex
+        -  level 0: attribute
+        -  level 1: ticker
+        """
+
+        print("init: need to override")
+        df_w = pd.DataFrame()
+        return df_w
+    
