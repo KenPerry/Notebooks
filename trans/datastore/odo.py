@@ -1,5 +1,7 @@
 from trans.datastore.base import DataStoreBase
 
+import pandas as pd
+
 from trans.data import GetData
 gd = GetData()
 
@@ -11,38 +13,25 @@ import dateutil.parser as dup
 from datetime import timedelta
 
 # SQLAlchemy
-from odo import *
-
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, create_engine, bindparam
+from sqlalchemy import Column, Integer, Float, String, Date, create_engine, bindparam
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Date, Float,create_engine, bindparam
-from sqlalchemy.orm import Session
-
 from sqlalchemy.sql import and_, or_, not_, func
-
-tableName = "prices"
 
 Base = declarative_base()
 
-class Price(Base):
-    __tablename__ = tableName
-    Ticker = Column(String(255), primary_key=True)
-    Date   = Column(Date, primary_key=True)
-    AdjClose = Column(Float)
-    Close   = Column(Float)
-    High    = Column(Float)
-    Low     = Column(Float)
-    Open    = Column(Float)
-    Volume  = Column(Float)
-
 
 class ODO(DataStoreBase):
-    def __init__(self, dbURL, debug=False, **params):
+    def __init__(self, dbURL, provider, debug=False, **params):
         self.dbURL    = dbURL
+        self.provider = provider
+
+        # Create the class for the records of the database
+        recConstructor = self.provider.recordConstructor(Base)
+        self.recConstructor = recConstructor
+
         self.Debug = debug
 
         if "echo" in params:
@@ -84,9 +73,10 @@ class ODO(DataStoreBase):
 
     def existing(self):
         session = self.session
-
+        rc = self.recConstructor
+        
         existingDates = {}
-        query = session.query(Price, Price.Ticker, func.min(Price.Date).label("min_date"), func.max(Price.Date).label("max_date")).group_by(Price.Ticker)
+        query = session.query(rc, rc.Ticker, func.min(rc.Date).label("min_date"), func.max(rc.Date).label("max_date")).group_by(rc.Ticker)
 
         results = query.all()
 
@@ -124,9 +114,20 @@ class ODO(DataStoreBase):
         - DataFrame: resulting data
         """
 
-        status, df =  gd.get_one(ticker, start, end)
-        if status:
+        # status, df =  gd.get_one(ticker, start, end)
+        #if status:
+        #    df = self.modify_in(df)
+
+        provider = self.provider
+        df = provider.get(tickers=[ticker], start=start, end=end)
+        if not df.empty:
+            # Convert from provider "standard format"
+            df.columns = df.columns.droplevel(level=1)
+
+            # Convert to Price table format
             df = self.modify_in(df)
+
+            status = True
 
         return status, df
             
@@ -236,13 +237,15 @@ class ODO(DataStoreBase):
         
     def update(self, ticker, df):
         session = self.session
-
+        rc = self.recConstructor
+        
         # Delete any existing rows that will be overwritten from df
         dates_up = df.index.tolist()
         dates_up_min, dates_up_max = df.index.min(), df.index.max()
 
         # query  = session.query(Price).filter(and_(Price.Ticker == ticker, Price.Date.in_(dates_up)))
-        query  = session.query(Price).filter(and_(Price.Ticker == ticker, Price.Date >= dates_up_min, Price.Date <= dates_up_max))
+        # query  = session.query(Price).filter(and_(Price.Ticker == ticker, Price.Date >= dates_up_min, Price.Date <= dates_up_max))
+        query  = session.query(rc).filter(and_(rc.Ticker == ticker, rc.Date >= dates_up_min, rc.Date <= dates_up_max))
         
         rows_num =  query.delete(synchronize_session="fetch") # or = False
         print("Ticker {t}, Deleted {n} rows between {s} and {e}".format(t=ticker, n=rows_num, s=dates_up_min, e=dates_up_max))
@@ -265,7 +268,8 @@ class ODO(DataStoreBase):
 
         # Insert one row at a time
         for row in rows:
-            rec = Price(**row)
+            #rec = Price(**row)
+            rec = rc(**row)
     
             session.add(rec)
 
@@ -303,19 +307,22 @@ class ODO(DataStoreBase):
         """
 
         session = self.session
+        rc = self.recConstructor
+        
         conditions = []
 
-        query = session.query(Price)
+        # query = session.query(Price)
+        query = session.query(rc)
 
         if tickers:
             # NOTE: if tickers is too long, the in_ may break in SQL.  Better to put tickers in a temp table and join with it to limit the tickers retrieved
-            conditions.append( Price.Ticker.in_(tickers) )
+            conditions.append( rc.Ticker.in_(tickers) )
             
         if start:
-            conditions.append(  Price.Date >= start )
+            conditions.append(  rc.Date >= start )
 
         if end:
-            condiitons.append(  Price.Date <= end )
+            conditions.append(  rc.Date <= end )
 
         if len(conditions) > 0:
             query = query.filter( and_( *conditions ) )
