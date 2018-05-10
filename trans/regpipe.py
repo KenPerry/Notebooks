@@ -21,7 +21,12 @@ class RegPipe:
 
     """
     
-    def __init__(self, df, debug=False):
+    def __init__(self, df, attr=None, debug=False):
+        if attr == None:
+            attr = "Pct"
+            print( "DEPRECATED: {cls}:__init__ called w/o \"attr\" arg., defaulting to {defv}.".format(cls=type(self), defv=attr) )
+
+        self.attr = attr
         self.df = df.copy()
         self.debug = debug
 
@@ -36,12 +41,12 @@ class RegPipe:
         self.indCols = cols
         
 
-    def addConst():
+    def addConst(self):
         """
         Add constant column (needed only for attribution, not regression)
         """
 
-        self.reg.addConst(("Pct", "1"), 1)
+        self.reg.addConst((self.attr, "1"), 1)
         
         
     def regress(self, start, end, window, step):
@@ -151,12 +156,12 @@ class RegPipe:
 
         # The dependents are derived from those tickers that have sensitivities
         depTickers = regAttr.depTickersFromSensAttrs(sensAttrs)
-        depCols = [ ("Pct", t) for t in depTickers ]
+        depCols = [ (self.attr, t) for t in depTickers ]
 
         regAttr.depCols = depCols
 
         # Add a constant column to the data (for the intercept attribution)
-        regAttr.addConst(("Pct", "1"), 1)
+        regAttr.addConst((self.attr, "1"), 1)
 
         
 
@@ -175,7 +180,7 @@ class RegPipe:
         depCols = regAttr.depCols
         
         indCols_w_intercept = [ c for c in self.indCols ]
-        indCols_w_intercept.insert(0, ("Pct", "1"))
+        indCols_w_intercept.insert(0, (self.attr, "1"))
 
         retAttr_df =regAttr.retAttrib(
             indCols_w_intercept,

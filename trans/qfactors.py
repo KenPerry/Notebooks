@@ -64,6 +64,8 @@ class MomentumPipe:
         """
         Create daily returns from self.price_df
         Needed to create the factor portfolio returns
+
+        These daily returns may (or may not) be the attribute that we will rank on, but are needed to construct portfolio daily returns
         """
         
         price_df    = self.price_df

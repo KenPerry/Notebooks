@@ -11,10 +11,13 @@ get_ipython().magic('load_ext autoreload')
 get_ipython().magic('autoreload 1')
 
 
-# In[2]:
+# In[ ]:
 
 import trans.datastore.odo as odb
 get_ipython().magic('aimport trans.datastore.odo')
+
+
+# In[2]:
 
 import datetime as dt
 import dateutil.parser as dup
@@ -40,7 +43,7 @@ with suppress(ImmediateDeprecationError):
 df.shape
 
 
-# In[4]:
+# In[ ]:
 
 try:
     df = web.DataReader(ticker, "yahoo", start, end)
@@ -50,20 +53,20 @@ except ImmediateDeprecationError as e:
     pass
 
 
-# In[5]:
+# In[ ]:
 
 df.shape
 df.head()
 
 
-# In[33]:
+# In[ ]:
 
 tingo_ak_file="/home/ubuntu/Notebooks/tiingo_apkey.txt"
 with open(tingo_ak_file, "r") as fp:
     ak_t = fp.read().rstrip()
 
 
-# In[39]:
+# In[ ]:
 
 df_t = web.DataReader(ticker, "tiingo", start, end, access_key=ak_t)
 df_t.shape
@@ -77,7 +80,83 @@ df.loc["2018-03-10":, "Adj Close"] - df_t.loc["2018-03-10":,"adjClose"]
 df_t.loc["2018-03-10":,"divCash"] == 0
 
 
-# In[8]:
+# In[ ]:
+
+av_ak_file="/home/ubuntu/Notebooks/alphavantage_apkey.txt"
+with open(av_ak_file, "r") as fp:
+    av_ak_t = fp.read().rstrip()
+
+
+# In[ ]:
+
+import pandas as pd
+import requests
+url="https://alphavantage.co/query"
+av_func= "TIME_SERIES_DAILY"
+av_args = { "apikey": av_ak_t,
+           "symbol": ticker,
+           "function": av_func
+          }
+
+url_str = "https://www.alphavantage.co/query?function={f}&symbol={s}&apikey={ak}".format(f="TIME_SERIES_DAILY", s=ticker, ak=av_ak_t)
+#url_str = url_str + "&outputsize=full"
+url_str_csv = url_str + "&datatype=csv"
+print(url_str)
+print(url_str_csv)
+
+df_c = pd.read_csv(url_str_csv)
+df_c.info()
+df_c.head()
+df_c[ "Date"] = df_c["timestamp"].map( lambda  s: pd.to_datetime(s, infer_datetime_format=True))
+df_c.set_index("Date")   
+df_c.tail()
+
+pages= requests.get(url_str)
+
+type(pages)
+dictionary = pages.json()
+keys = list( dictionary.keys())
+print(keys)
+series = keys[1]
+df_av = pd.DataFrame.from_dict( dictionary[series], orient="index")
+df_av = df_av.astype(float)
+df_av.info()
+
+
+
+
+
+# In[ ]:
+
+df_av.tail()
+
+
+# In[4]:
+
+from trans.dataprovider.alphavantage import Alphavantage
+get_ipython().magic('aimport trans.dataprovider.alphavantage')
+aa = Alphavantage()
+
+
+# In[ ]:
+
+df_a = aa.get(tickers=["FB", "AAPL", "AMZN", "NFLX", "GOOG"], start=start, end=end)
+
+
+# In[ ]:
+
+df_a.tail()
+df_a.sort_index(axis=1, level=0, inplace=True)
+df_a.sort_index(axis=1, level=1, inplace=True)
+df_a.tail()
+
+
+# In[ ]:
+
+df_a.columns
+
+
+# In[ ]:
 
 from trans.dataprovider.PDR.yahoo import Yahoo
 get_ipython().magic('aimport trans.dataprovider.PDR.yahoo')
@@ -86,13 +165,13 @@ yh = Yahoo()
 df_yp = yh.get(tickers=["FB", "AAPL", "AMZN", "NFLX", "GOOG"], start=start, end=end)
 
 
-# In[9]:
+# In[ ]:
 
 df_yp.info()
 df_yp.tail()
 
 
-# In[42]:
+# In[ ]:
 
 from trans.dataprovider.PDR.tiingo import Tiingo
 get_ipython().magic('aimport trans.dataprovider.PDR.base')
@@ -103,42 +182,45 @@ tg = Tiingo(access_key=ak_t)
 df_tg = tg.get(tickers=["FB", "AAPL", "AMZN", "NFLX", "GOOG"], start=start, end=end)
 
 
-# In[43]:
+# In[ ]:
 
 df_tg.info()
 df_tg.tail()
 
 
-# In[12]:
+# In[10]:
 
 from trans.dataprovider.odo import ODO
 get_ipython().magic('aimport trans.dataprovider.odo')
+from sqlalchemy.ext.declarative import declarative_base
 
-dburl="sqlite:///full.db"
+dburl="sqlite:////tmp/full.db"
+decBase = declarative_base()
 
-odr = ODO(dbURL=dburl)
+odr = ODO(dbURL=dburl, declarative_base=decBase, provider=aa)
 # pyh.source = "yahoo"
 df_od = odr.get(tickers=["FB", "AAPL", "AMZN", "NFLX", "GOOG"], start=start, end=end)
 
 
-# In[13]:
+# In[9]:
 
 df_od.info()
+df_od.tail()
 
 
-# In[14]:
+# In[ ]:
 
 from trans.data import GetData
 gd = GetData()
 
 
-# In[16]:
+# In[ ]:
 
 status, df_gd = gd.get_one("FB", start, end)
 df_gd.info()
 
 
-# In[31]:
+# In[ ]:
 
 import pandas as pd
 idx = pd.IndexSlice

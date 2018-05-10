@@ -310,7 +310,7 @@ for stk in stack :
 get_ipython().magic('aimport trans.stacked.residual')
 from trans.stacked.residual import Residual
 
-rstack = Residual(debug=True)
+rstack = Residual(indCols=[ idx["Pct", "SPY"] ], debug=True)
 rstack.init(df=pct_df, start=resStart, end=regEnd, window=regWindow, step=regStep)
 resid_stack = rstack.repeated()
 rstack.done()
@@ -377,12 +377,7 @@ pl_stack = plstack.repeated()
 plstack.done()
 
 
-# In[70]:
-
-get_ipython().magic('pinfo plt.figure')
-
-
-# In[87]:
+# In[37]:
 
 get_ipython().magic('matplotlib inline')
 

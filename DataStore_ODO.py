@@ -35,7 +35,7 @@ yh_dp = yh.Yahoo()
 
 # ## Create a Tiingo data provider
 
-# In[5]:
+# In[ ]:
 
 import trans.dataprovider.PDR.tiingo as tg
 get_ipython().magic('aimport trans.dataprovider.PDR.tiingo')
@@ -47,29 +47,39 @@ with open(tingo_ak_file, "r") as fp:
 tg_dp = tg.Tiingo(access_key=ak_t)
 
 
-# In[19]:
+# ## Create an Alphvantage provider
+
+# In[5]:
+
+import trans.dataprovider.alphavantage as aa
+get_ipython().magic('aimport trans.dataprovider.alphavantage')
+
+aa_dp = aa.Alphavantage()
+
+
+# In[ ]:
 
 dburl = 'sqlite:////tmp/foo.db'
-db = odb.ODO(dburl, provider=tg_dp, echo=True)
+db = odb.ODO(dburl, provider=aa_dp, echo=True)
 
 
-# In[20]:
+# In[ ]:
 
 db.setup_database()
 
 
-# In[21]:
+# In[ ]:
 
 if create:
     db.setup_database()
 
 
-# In[9]:
+# In[6]:
 
 Memorialize = False
 
 
-# In[10]:
+# In[ ]:
 
 today = dt.datetime.combine( dt.date.today(), dt.time.min)
 if Memorialize:
@@ -78,22 +88,29 @@ if Memorialize:
 start = dup.parse("01/01/2018")
 end   = today
 
+
+# In[ ]:
+
 status, df_go = db.get_one("AAPL", start, end)
+
+
+# In[ ]:
+
+df_go.tail()
 
 
 # ## Create a small load
 
-# In[23]:
+# In[ ]:
 
-get_ipython().magic('aimport trans.dataprovider.PDR.tiingo')
-import trans.dataprovider.PDR.tiingo
+
 tickers = [ "FB", "AAPL", "AMZN", "NFLX", "GOOG"]
 changed_tickers = db.get_data(tickers, start, end)
 
 
 # ## Get info about existing table in db
 
-# In[12]:
+# In[ ]:
 
 from sqlalchemy import Table, MetaData
 meta = MetaData()
@@ -102,7 +119,7 @@ p = Table("prices", meta, autoload=True, autoload_with=db.engine)
 
 # ## Enumerate the columns
 
-# In[13]:
+# In[ ]:
 
 [ c.name for c in p.columns ]
 
@@ -110,7 +127,7 @@ p = Table("prices", meta, autoload=True, autoload_with=db.engine)
 # ## On load, catch the events and name attributes based on physical table column names.
 # These attributes DON'T affect the table (or even create a view), they are just attributes of the Table object and control the name of it's attributes
 
-# In[9]:
+# In[ ]:
 
 from sqlalchemy import Table, event 
 @event.listens_for(Table, "column_reflect")
@@ -119,7 +136,7 @@ def column_reflect(inspector, table, column_info):
     column_info["key"] = "test_{}".format(column_info["name"])
 
 
-# In[12]:
+# In[ ]:
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Date, Float,create_engine, bindparam
@@ -136,7 +153,7 @@ class TestClass(Base):
    
 
 
-# In[31]:
+# In[ ]:
 
 import pandas as pd
 sess = db.session
@@ -147,24 +164,27 @@ for r in q.all():
 # df_tc = pd.read_sql(q.statement, sess.bind)
 
 
-# In[18]:
+# In[ ]:
 
 df_tc.shape
 
 
 # ## Create a full load
 
-# In[25]:
-
-get_ipython().magic('aimport trans.dataprovider.PDR.tiingo')
-import trans.dataprovider.PDR.tiingo
+# In[13]:
 
 dburl = 'sqlite:////tmp/full.db'
-idb = odb.ODO(dburl, provider=tg_dp)
+from sqlalchemy.ext.declarative import declarative_base
 
-idb.setup_database()
+dburl="sqlite:////tmp/full.db"
+decBase = declarative_base()
 
-idb.existing()
+idb = odb.ODO(dburl, declarative_base=decBase, provider=aa_dp)
+
+if create:
+    idb.setup_database()
+
+idb_tickers = idb.existing()
 from datetime import timedelta
 
 today = dt.datetime.combine( dt.date.today(), dt.time.min)
@@ -174,14 +194,43 @@ end  = today
 from trans.data import GetData
 gd = GetData()
 tickers = gd.existing()
+
+tickers = idb_tickers
 tickers.sort()
 print( len(tickers) )
 
 
-# In[27]:
+# In[45]:
 
 changed = idb.get_data(tickers, start, end)
 
+
+# In[46]:
+
+len(changed)
+
+
+# ## Read back some data.  Use the DataProvider for ODO to read, NOT the DataStore for ODO!
+# ## Must pass both the dbURL and AA DataProvider to the ODO DataProvider.  
+# ### The AA DataProvider providd to the DataProvider (reader) should be the same as was used by the DataStore (writer) and is needed to know the format of the data stored in ODO
+
+# In[11]:
+
+import trans.dataprovider.odo as odo_reader
+get_ipython().magic('aimport trans.dataprovider.odo')
+
+from sqlalchemy.ext.declarative import declarative_base
+
+dburl="sqlite:////tmp/full.db"
+decBase_r = declarative_base()
+
+odr = odo_reader.ODO(dburl, declarative_base=decBase_r, provider=aa_dp)
+
+df_aa = odr.get(tickers=["FB", "AAPL", "AMZN", "NFLX", "GOOG" ], start="2018-03-01")
+df_aa.shape
+
+
+# ## combine_data is deprecated ! Don't use writer (DataProvider) to read !
 
 # In[ ]:
 
@@ -206,7 +255,7 @@ tickers = [ "FB", "AAPL", "AMZN" ]
 db.get_data(tickers, start, end)
 
 
-# In[10]:
+# In[ ]:
 
 df = db.combine_data(["A", "AA"])
 df.shape

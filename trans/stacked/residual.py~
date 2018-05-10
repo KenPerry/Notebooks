@@ -11,18 +11,8 @@ from datetime import timedelta
 from trans.stacked.base import StackBase
 
 class Residual(StackBase):
-    def __init__(self, indCols=None, rollAmount=0, fillMethod="bfill", attr=None, debug=False, **params):
+    def __init__(self, indCols= [ idx["Pct", "SPY"] ], rollAmount=0, fillMethod="bfill", debug=False, **params):
         self.Debug = debug
-
-        if attr == None:
-            attr = "Pct"
-            print("DEPRECATED: {cls}:__init__ called w/o \"attr\" arg., defaulting to {defv}.".format(cls=type(self), defv=attr) )
-
-        if indCols == None:
-            indCols = [ idx[attr, "SPY"] ]
-            print( "DEPRECATED: {cls}:__init__ called w/o \"indCols\" arg., defaulting to {defv}.".format(cls=type(self), defv=indCols) )
-
-        self.attr = attr
         self.indCols = indCols
         self.rollAmount = rollAmount
         self.fillMethod = fillMethod
@@ -33,9 +23,7 @@ class Residual(StackBase):
 
     def residual(self, df):
         # Do a (non-rolling) regression on entire DataFrame
-        attr = self.attr
-        
-        rps = RegPipe(df, attr=attr)
+        rps = RegPipe(df)
         indCols = self.indCols
         rps.indCols( indCols )
         rps.regressSingle()

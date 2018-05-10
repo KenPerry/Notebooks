@@ -20,7 +20,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from sqlalchemy.sql import and_, or_, not_, func
 
-Base = declarative_base()
+# Base = declarative_base()
 
 
 class ODO(DataStoreBase):
@@ -28,8 +28,12 @@ class ODO(DataStoreBase):
         self.dbURL    = dbURL
         self.provider = provider
 
+        if "declarative_base" in params:
+            self.decBase = params["declarative_base"]
+
         # Create the class for the records of the database
-        recConstructor = self.provider.recordConstructor(Base)
+        decBase = self.decBase
+        recConstructor = self.provider.recordConstructor(decBase)
         self.recConstructor = recConstructor
 
         self.Debug = debug
@@ -61,8 +65,9 @@ class ODO(DataStoreBase):
         dbURL = self.dbURL
         engine = self.engine
 
-        Base.metadata.drop_all(engine)
-        Base.metadata.create_all(engine)
+        decBase = self.decBase
+        decBase.metadata.drop_all(engine)
+        decBase.metadata.create_all(engine)
     
     def createSession(self):
         engine = self.engine
@@ -118,6 +123,8 @@ class ODO(DataStoreBase):
         #if status:
         #    df = self.modify_in(df)
 
+        status = False
+        
         provider = self.provider
         df = provider.get(tickers=[ticker], start=start, end=end)
         if not df.empty:
@@ -128,6 +135,8 @@ class ODO(DataStoreBase):
             df = self.modify_in(df)
 
             status = True
+        else:
+            print("get_one: {t} returns no data.".format(t=ticker))
 
         return status, df
             
@@ -187,8 +196,7 @@ class ODO(DataStoreBase):
 
                 # Did get_one really extend df ?
                 # NOTE: the file index are Dates (MM/DD/YYYY), get_one index is DateTime
-
-                if status and ( (df.index.min()  > last_dt) or (df.index.min() < first_dt) ):
+                if status and ( (df.index.max()  > last_dt) or (df.index.min() < first_dt) ):
                     changed = True
                     self.update(ticker, df)
 

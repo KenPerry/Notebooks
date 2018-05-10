@@ -10,6 +10,15 @@ from datetime import timedelta
 """
 Base class for DataStore
 
+DataStore is used to obtain external data and store it in a database.
+It
+- uses a DataProvider to obtain data (e.g., Yahoo)
+  The DataProvider dp implements a method "recConstructor" that defines the storage shape.
+
+- stores the data in a database, using the DataProvider's storage shape
+
+
+
 """
 
 class DataStoreBase:

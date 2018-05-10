@@ -59,7 +59,6 @@ class Date_Manipulator:
         
         # Find last day of month containing end_d
         last_d = end_d.replace(day=1) + datedelta.datedelta(months=1) - datedelta.datedelta(days=1)
-        print("End {}, last {}".format(end_d, last_d))
 
         result = [ ]
 

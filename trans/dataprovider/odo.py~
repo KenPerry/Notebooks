@@ -95,22 +95,9 @@ class ODO(DataProviderBase):
         return session
 
     def modify(self, df):
-        # Input df  is "thin": one column each for Date, Ticker, and attributes (i.e., df.columns ins NOT MultiIndex)
-    
-        # Rename columns
         df = df.rename( columns={ "AdjClose": "Adj Close"} )
 
-        # Create a  Datetime column from Date
-        df[ "Dt" ] = df.loc[:,"Date"].map( lambda  s: pd.to_datetime(s, infer_datetime_format=True) )
-        df = df.drop("Date", axis=1)
-
-        # Set index to be (Dt, Ticker)
-        df.set_index(["Dt", "Ticker"], inplace=True)
-
-        # Turn thin table into wide by moving Ticker index to column
-        df_w = df.unstack(level=1)
-
-        return df_w
+        return df
 
     def get(self, tickers=None, start=None, end=None):
         """
@@ -144,7 +131,17 @@ class ODO(DataProviderBase):
             
         df = pd.read_sql(query.statement, session.bind)
 
-        # Modify: rename columns, turn df from thin to wide
-        df_w = self.modify(df)
+        # Modify
+        df = self.modify(df)
+
+        # Create a  Datetime column from Date
+        df[ "Dt" ] = df.loc[:,"Date"].map( lambda  s: pd.to_datetime(s, infer_datetime_format=True) )
+        df = df.drop("Date", axis=1)
+
+        # Set index to be (Dt, Ticker)
+        df.set_index(["Dt", "Ticker"], inplace=True)
+
+        # Turn thin table into wide by moving Ticker index to column
+        df_w = df.unstack(level=1)
 
         return df_w
