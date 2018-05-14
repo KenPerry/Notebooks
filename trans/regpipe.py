@@ -13,7 +13,10 @@ idx = pd.IndexSlice
 
 
 ### TO DO:
-####  addConst and related: intercept attribute name is "Pct" -- could be anything
+####  regAttr: the independent variables (inlcuding the constant) MUST have the same attribute, stored in self.attr (Don't think regAttr module requires this, so needless assumption)
+####     see:
+#####        depCols = [ (self.attr, t) for t in depTickers ]
+#####        indCols_w_intercept.insert(0, (self.attr, "1"))
 ####  Sensitivity attribute is "Beta" (hard-coded).  Use this to find dep. tickers (level 1).  Then need to find depCols (assumes single attribute, noq)
 
 class RegPipe:
@@ -158,6 +161,10 @@ class RegPipe:
         depTickers = regAttr.depTickersFromSensAttrs(sensAttrs)
         depCols = [ (self.attr, t) for t in depTickers ]
 
+        (iCols, dCols) = self.reg.modelCols( self.indCols )
+
+        print("{cls}:attrib_setup: depCols = {depC}, dCols = {dC}".format(cls=type(self), depC=depCols, dC=dCols))
+              
         regAttr.depCols = depCols
 
         # Add a constant column to the data (for the intercept attribution)

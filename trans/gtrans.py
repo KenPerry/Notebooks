@@ -1283,7 +1283,7 @@ class GetDataTransformer(BaseEstimator, TransformerMixin):
         # Use GetData to obtain the data
         if "dataStore" in params:
             gd = params["dataStore"]
-            print("dataStore passed")
+            print("{cls}:__init__: dataStore passed".format(cls=type(self)))
         else:
             gd = GetData()
             
@@ -1385,7 +1385,7 @@ class GetDataProviderTransformer(BaseEstimator, TransformerMixin):
         # Use GetData to obtain the data
         if "dataProvider" in params:
             gd = params["dataProvider"]
-            print("dataProvider passed")
+            print("{cls}:__init__: dataProvider passed".format(cls=type(self)))
         else:
             gd = GetData()
             

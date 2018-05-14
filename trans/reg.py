@@ -81,7 +81,7 @@ class Reg:
         colNanNames = colIdx[ colHasNan ].tolist()
             
         if (len(colNanNames) > 0):
-            print("Fit: the following columns have naN: ", colNanNames)
+            print("{cls}:fit: the following columns have naN: ".format(cls=type(self)), colNanNames)
             return interc_empty, betas_empty            
         
         mat = np.asarray(df)

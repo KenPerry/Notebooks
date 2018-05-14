@@ -79,52 +79,64 @@ len(universe)
 
 # In[8]:
 
+if Memorialize:
+    universe = ["FB", "AAPL", "AMZN", "NFLX", "GOOG" ]
+
+
+# In[9]:
+
 import trans.quantfactor.volatility as vf
 get_ipython().magic('aimport trans.quantfactor.volatility')
 
 get_ipython().magic('aimport trans.gtrans')
 get_ipython().magic('aimport trans.quantfactor.base')
 
-v = vf.Volatility(universe=["FB", "AAPL", "AMZN", "NFLX", "GOOG" ], dataProvider=odr)
-
-
-# In[9]:
-
-daily_price_df = v.load_prices(start=start, end=end)
+v = vf.Volatility(universe=universe, dataProvider=odr)
 
 
 # In[10]:
 
-daily_price_df.shape
+daily_price_df = v.load_prices(start=start, end=end)
 
 
 # In[11]:
 
-existing_tickers = list(daily_price_df.columns.get_level_values(1).unique())
-existing_tickers.sort()
-existing_tickers
+daily_price_df.shape
 
 
 # In[12]:
+
+if Memorialize:
+    gd.save_data(price_df.loc[:, "Adj Close"], "verify_volat_raw_df.pkl")
+
+
+# In[13]:
+
+existing_tickers = list(daily_price_df.columns.get_level_values(1).unique())
+existing_tickers.sort()
+len(existing_tickers)
+
+
+# In[14]:
 
 price_attr = "Adj Close"
 ret_attr = "Pct"
 daily_ret_df = v.create_dailyReturns(price_attr, ret_attr )
 
 
-# In[13]:
+# In[15]:
 
 daily_ret_df.shape
 
 
-# In[14]:
+# In[16]:
 
 dm = Date_Manipulator( v.price_df.index )
 eom_in_idx = dm.periodic_in_idx_end_of_month(end)
 v.set_endDates( eom_in_idx )
 
 
-# In[15]:
+# In[17]:
 
 from datetime import timedelta
 vol_window = timedelta(days=30)
@@ -132,31 +144,44 @@ vol_window = timedelta(days=30)
 v.create_period_attr( v.daily_ret_df.loc[:, idx[ret_attr,:]], start, end, vol_window, "Volatility")
 
 
-# In[16]:
+# In[18]:
 
 daily_rank_df = v.create_ranks()
 
 
-# In[17]:
+# In[19]:
 
-daily_rank_df.loc[ "2018-01-31":"2018-03-02"]
+if Memorialize:
+    daily_rank_df.loc[ "2018-01-31":"2018-03-02"]
 
 
-# In[18]:
+# In[20]:
 
 factor_df = v.create_factor()
 
 
-# In[19]:
+# In[21]:
 
 factor_df.tail()
+
+
+# ## Simplified version of factor creation: combine all steps into one method "create"
+
+# In[24]:
+
+v2 = vf.Volatility(universe=universe, dataProvider=odr)
+factor_df2 = v2.create(start=start, end=end,
+               price_attr="Adj Close", ret_attr="Ret", rank_attr="Factor",
+               window=timedelta(days=30)
+             )
+factor_df2.tail()
 
 
 # ## Create residuals
 
 # ### Create DataFrame for residual computation
 
-# In[20]:
+# In[ ]:
 
 resid_input_df =pd.concat( [ factor_df.loc[:, idx[ret_attr, "Port net"]],
     v.daily_ret_df.loc[:, idx[ret_attr,"SPY"]]
@@ -164,7 +189,7 @@ resid_input_df =pd.concat( [ factor_df.loc[:, idx[ret_attr, "Port net"]],
          )
 
 
-# In[21]:
+# In[ ]:
 
 get_ipython().magic('aimport trans.stacked.residual')
 from trans.stacked.residual import Residual
@@ -174,17 +199,18 @@ regWindow = rd.relativedelta(months=+2)
 regStep   = rd.relativedelta(weeks=+4)
 
 
-# In[22]:
+# In[ ]:
 
 ret_attr
 
 
-# In[23]:
+# In[ ]:
 
 get_ipython().magic('aimport trans.reg')
+get_ipython().magic('aimport trans.regpipe')
 
 
-# In[24]:
+# In[ ]:
 
 rstack = Residual(indCols=[ idx[ret_attr, "SPY"] ], debug=True)
 rstack.init(df=resid_input_df, start=resStart, end=v.endDates[-1], window=regWindow, step=regStep)
@@ -192,7 +218,7 @@ resid_stack = rstack.repeated()
 rstack.done()
 
 
-# In[25]:
+# In[ ]:
 
 (l, resid_last_df) = resid_stack[0]
 resid_last_df.columns 
@@ -204,14 +230,19 @@ for r in resid_stack:
 
 # ## Find the sensitivity of selected names
 
-# In[26]:
+# In[ ]:
 
-names = [ "BA", "PAGS", "CTXS", "TSLA", "NFLX"< "MSFT", "EA" ]
+names = [ "BA", "PAGS", "CTXS", "TSLA", "NFLX"< "MSFT", "EA", "BABA", "AYI", "SABR", "TXN" ]
 
 
-# ## Get returns
+# In[ ]:
 
-# In[27]:
+names = existing_tickers
+
+
+# ## Get returns of members of the universe
+
+# In[ ]:
 
 from trans.gtrans import *
 # Get the data for the tickers in self.universe
@@ -230,12 +261,19 @@ daily_ret_df = daily_ret_pl.fit_transform( price_df )
 
 # ## Compute betas wrt vol factor
 
-# In[28]:
+# ### Rename the "Error" attribute to ret_attr
+
+# In[ ]:
 
 volat_resid_df = resid_last_df.loc[:, idx["Error",:]]
 volat_resid_df.tail()
 lev0 =  volat_resid_df.columns.levels[0].tolist()
 lev0[ lev0.index("Error")] = ret_attr
+
+
+# ### Rename the ticker to "Volat factor", and the attibute to ret_attr
+
+# In[ ]:
 
 volat_resid_df.columns.set_levels(["Volat factor"], level=1, inplace=True)
 volat_resid_df.columns.set_levels(lev0, level=0, inplace=True)
@@ -243,18 +281,29 @@ volat_resid_df.columns.set_levels(lev0, level=0, inplace=True)
 volat_resid_df.tail()
 
 
-# In[29]:
+# ## Compute the std dev. of the Volatility factor (outperformance)
+
+# In[ ]:
+
+volat_resid_df.loc[ v.endDates[-1] -rd.relativedelta(months=+1):, :].std()
+
+
+# ## Put the returns of the universe and the Volatlity factor in same DataFrame
+
+# In[ ]:
 
 reg_input_df = DataFrameConcat( [ daily_ret_df.loc[:, idx[ret_attr,:]], volat_resid_df] ).fit_transform(pd.DataFrame())
 
 
-# In[30]:
+# In[ ]:
 
 reg_input_df.columns
 reg_input_df.loc[ volat_resid_df.index.max() - rd.relativedelta(months=+1):]
 
 
-# In[31]:
+# ## Perform rolling regression of each member of universe vs. Volat factor
+
+# In[ ]:
 
 from trans.regpipe import RegPipe
 rp = RegPipe( reg_input_df )
@@ -262,12 +311,22 @@ rp.indCols( [ idx[ret_attr, "Volat factor"] ] )
 rp.regress( resStart, v.endDates[-1], regWindow, regStep)
 
 
-# In[32]:
+# In[ ]:
 
 rp.beta_df
 
 
-# In[33]:
+# In[ ]:
+
+gd.save_data(rp.beta_df, "/tmp/beta_wrt_volfactor_04302018.pkl")
+
+
+# In[ ]:
+
+rp.beta_df.loc[ rp.beta_df.index.max(), idx["Beta 1",:]].to_csv("/tmp/beta_wrt_volfactor_04302018.csv")
+
+
+# In[ ]:
 
 missing_universe = list(set(universe) - set(existing_tickers))
 missing_universe.sort()

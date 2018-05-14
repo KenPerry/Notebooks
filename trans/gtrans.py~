@@ -341,7 +341,8 @@ class GenSelectAttrsTransformer(BaseEstimator, TransformerMixin):
 
             # Drop the unused attributes
             if pd.__version__ > "0.20.0":
-                trans.columns.remove_unused_levels(inplace=True)
+                print("PANDA version > 0.20.0")
+                trans.columns = trans.columns.remove_unused_levels()
             else:
                 # Get the active column names (as pairs) and re-create column MultiIndex
                 z  = list( zip(trans.columns.get_level_values(0), trans.columns.get_level_values(1)) )
@@ -1249,6 +1250,12 @@ class GetDataTransformer(BaseEstimator, TransformerMixin):
     tickers: list of tickers to get
     cal_ticker: ticker whose dates will be used as the common "calendar"
 
+    (optional):
+    start: DateTime start of data date
+    end:   DateTime start of data date
+
+    dataStore: a DateStore object to fetch the data (defaults to GetData(), which is not (yet) a DataStore oject but implements the correct signatures)
+
     Returns:
     trans: DataFrame, with index the same as cal_ticker (i.e., cal_ticker's index is used as the common index -- the "calendar")
     - trans.index   will be of type index.DateTimeIndex and named "Dt"
@@ -1259,11 +1266,24 @@ class GetDataTransformer(BaseEstimator, TransformerMixin):
     
     """
     
-    def __init__(self, tickers, cal_ticker=None, **params):
+    def __init__(self, tickers, cal_ticker=None, start=None, end=None, **params):
+        """
+        Deprecated in favor of GetDataProviderTransformer.
+
+        GetDataProviderTransformer is nearly identical execpt for:
+        - arg is "dataProvider" instead of "dataStore"
+        - the method call on dataProvider is "get", instead of "combine_data"
+
+        We came to realize that DataStore objects should NOT be used for retrieval (hence, should never have had a combine_data method to retrieve data.
+        The correct object ot retrieve data is a DataProvider and the retrieval method is called "get"
+
+        """
+        print("DEPRECATED in favor of GetDataProviderTransformer.")
+        
         # Use GetData to obtain the data
         if "dataStore" in params:
             gd = params["dataStore"]
-            print("dataStore passed")
+            print("{cls}:__init__: dataStore passed".format(cls=type(self)))
         else:
             gd = GetData()
             
@@ -1280,6 +1300,7 @@ class GetDataTransformer(BaseEstimator, TransformerMixin):
             tickers.insert(0, cal_ticker)
             
         self.tickers, self.cal_ticker = tickers, cal_ticker
+        self.start, self.end = start, end
 
 
     def transform(self, X, **transform_params):
@@ -1326,12 +1347,114 @@ class GetDataTransformer(BaseEstimator, TransformerMixin):
         """
 
         gd = self.gd
-        df = gd.combine_data( self.tickers )
+        df = gd.combine_data( self.tickers, start=self.start, end=self.end )
 
         self.df = df
         
         return self
+
+class GetDataProviderTransformer(BaseEstimator, TransformerMixin):
+    """ 
+    A DataFrame transformer that gets raw data (from a DataProvider) of multiple tickers, and assembles into a wide DataFrame
     
+    Parameters
+    ----------
+    tickers: list of tickers to get
+    cal_ticker: ticker whose dates will be used as the common "calendar"
+
+    (optional):
+    start: DateTime start of data date
+    end:   DateTime start of data date
+
+    dataProvider: a DateProvider object to fetch the data (defaults to GetData(), which is not (yet) a DataProvider oject but implements the correct signatures)
+
+    Returns:
+    trans: DataFrame, with index the same as cal_ticker (i.e., cal_ticker's index is used as the common index -- the "calendar")
+    - trans.index   will be of type index.DateTimeIndex and named "Dt"
+    - trans.columns will be a MultiIndex.
+    -- the attributes will be the headers within the files
+    -- the second level will be the tickers
+    -- rows that are all null will be elimnated (n.b., should be no such rows since the cal_ticker column should never be empty ?)
+    
+    """
+    
+    def __init__(self, tickers, cal_ticker=None, start=None, end=None, **params):
+        """
+
+        """
+        # Use GetData to obtain the data
+        if "dataProvider" in params:
+            gd = params["dataProvider"]
+            print("dataProvider passed")
+        else:
+            gd = GetData()
+            
+        self.gd = gd
+        
+        # Default for tickers are all existing files
+        if not tickers:
+            tickers = gd.existing()
+
+        # Make sure cal_ticker is in tickers
+        if not cal_ticker in tickers:
+            # Make a copy of tickers since .insert modifies
+            tickers = list(tickers)
+            tickers.insert(0, cal_ticker)
+            
+        self.tickers, self.cal_ticker = tickers, cal_ticker
+        self.start, self.end = start, end
+
+
+    def transform(self, X, **transform_params):
+        """ 
+        Gets the data for all tickers, converts index to DateTime, restricts index to those dates present in cal_ticker
+        
+        Parameters
+        ----------
+        X : pandas DataFrame (ignored)
+            
+        Returns
+        ----------
+        
+        trans : DataFrame
+
+        """
+
+        cal_ticker =self.cal_ticker
+
+        # Pipeline to convert index to DateTime and restrict it to the dates that cal_ticker has data
+        pipe_d = make_pipeline( DatetimeIndexTransformer("Dt"),
+                                RestrictToCalendarColTransformer( ("Adj Close", cal_ticker)),
+                                RestrictToNonNullTransformer("all")
+                                )
+
+        trans = self.df # pipe_d.fit_transform( self.df )
+                
+        return trans
+        
+ 
+    def fit(self, X, y=None, **fit_params):
+        """ 
+        Get the data for the tickers in self.tickers
+        
+        Parameters
+        ----------
+        X : pandas DataFrame
+        y : default None
+                
+        
+        Returns
+        ----------
+        self  
+        """
+
+        gd = self.gd
+        df = gd.get( self.tickers, start=self.start, end=self.end )
+
+        self.df = df
+        
+        return self
+
 
 class SklearnPreproccessingTransformer(BaseEstimator, TransformerMixin):
     """

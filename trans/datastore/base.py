@@ -24,29 +24,32 @@ It
 class DataStoreBase:
     def __init__(self, debug=False, **params):
         self.Debug = debug
-        print("init: need to override")
 
 
     def setup_database(self):
-        print("init: need to override")
+        print("{cls}:setup_database: need to override".format(cls=type(self)))
 
     
     def createSession(self):
-        print("init: need to override")
+        print("{cls}:createSession: need to override".format(cls=type(self)))
+
   
     def existing(self):
-        print("init: need to override")
+        print("{cls}:existing: need to override".format(cls=type(self)))
+
         tickers = []
         return tickers
 
     def modify_in(self, df):
-        print("init: need to override")
+        print("{cls}:modify_in: need to override".format(cls=type(self)))
+
         df = pd.DataFrame()
 
         return df
 
     def modify_out(self, df):
-        print("init: need to override")
+        print("{cls}:modify_out: need to override".format(cls=type(self)))
+        
         df = pd.DataFrame()
 
         return df

@@ -1,0 +1,17 @@
+from trans.quantfactor.base import QuantFactorBase
+
+from datetime import timedelta
+
+idx = pd.IndexSlice
+
+class Volatility(QuantFactorBase):
+    """
+    Parameters
+    ----------
+    daily_df: DataFrame with high-frequency index
+
+    Creates attributes
+    ------------------
+    period_df: DataFrame with low-frequency index
+
+    """

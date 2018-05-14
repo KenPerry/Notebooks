@@ -1,0 +1,12 @@
+from trans.quantfactor.base import QuantFactorBase
+
+import pandas as pd
+from datetime import timedelta
+
+idx = pd.IndexSlice
+
+class Volatility(QuantFactorBase):
+
+    def fit(self, df):
+        return df.std()
+        

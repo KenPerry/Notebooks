@@ -11,35 +11,56 @@ from trans.reg import Reg, RegAttr
 
 idx = pd.IndexSlice
 
+
+### TO DO:
+####  regAttr: the independent variables (inlcuding the constant) MUST have the same attribute, stored in self.attr (Don't think regAttr module requires this, so needless assumption)
+####     see:
+#####        depCols = [ (self.attr, t) for t in depTickers ]
+#####        indCols_w_intercept.insert(0, (self.attr, "1"))
+####  Sensitivity attribute is "Beta" (hard-coded).  Use this to find dep. tickers (level 1).  Then need to find depCols (assumes single attribute, noq)
+
 class RegPipe:
     """
 
     """
     
-    def __init__(self, df, debug=False):
+    def __init__(self, df, attr=None, debug=False):
+        if attr == None:
+            attr = "Pct"
+            print( "DEPRECATED: {cls}:__init__ called w/o \"attr\" arg., defaulting to {defv}.".format(cls=type(self), defv=attr) )
+
+        self.attr = attr
         self.df = df.copy()
         self.debug = debug
 
         self.reg = Reg(df)
 
 
-    def indCol(self, col):
-        self.indCol = col
+    def indCols(self, cols):
+        """
+        Set independent variable column names to cols
+        """
+        
+        self.indCols = cols
         
 
-    def addConst():
+    def addConst(self):
         """
         Add constant column (needed only for attribution, not regression)
         """
 
-        self.reg.addConst(("Pct", "1"), 1)
+        self.reg.addConst((self.attr, "1"), 1)
         
         
     def regress(self, start, end, window, step):
-        reg = self.reg
-        indCol = self.indCol
+        """
+        Rolling regression of size window,  from end backwards to start, in steps of size step
+        """
         
-        ma = reg.modelCols( [ indCol ])
+        reg = self.reg
+        indCols = self.indCols
+        
+        ma = reg.modelCols( indCols )
 
         beta_df = reg.rollingModelAll( *ma, 
                                        start, end,
@@ -49,32 +70,42 @@ class RegPipe:
 
         self.beta_df = beta_df
 
-
-    def indexUnionBeta(self, freq_index):
+    def regressSingle(self):
         """
-        Re-shapes self.beta_df
-
-        The modified self.beta_df index is the UNION of the original index f self.beta_df and the index freq_index
-        It DIFFERS from pd.reindex(freq_index) as follows:
-        - we get the UNION of the dates in the original and in freq_index
-        - pd.reindex(foo) will create a DataFrame whose index is exactly foo
+        Single regression using entire DataFrame (in self.reg.data)
         """
-        
-        beta_df = self.beta_df
 
-        # Create an empty DataFrame with the index freq_index
-        empty_df = pd.DataFrame(index=freq_index)
+        df = self.df
+        start, end = df.index.min(), df.index.max()
+        window = end - start + timedelta(days=1)
+        step   = window
 
-        # Join beta_df with the empty dataframe, resulting in an index that is the union of the indices of the two constituents
-        beta_df = pd.concat( [beta_df, empty_df], axis=1)
-        
-        self.beta_df = beta_df
+        return self.regress(start, end, window, step)
         
     def rollBeta(self, periods, fill_method):
         """
+        Roll and fill the betas contained in self.beta_df
+
+        self.beta_df usually sparse (e.g., every "step" days, where step is the increment of rolling regression).
+        Result of rollBeta is completely filled DataFrame (using the fill_method).
+        Before rolling, the betas can be shifted in time to accomodate in/out of sample calculations
+
+        - periods=0, fill_method="bfill": can use to calculate regression residual
+        - periods=1, fill_method="ffill": can use to calculate forward prediction/outperformance
+
+
+        Parameters
+        ----------
+        periods: integer amount (positive/negative) to roll beta forward/backward before filling
+
         fill_method: {"ffill", "bfill"}
         - ffill: forward fill
         - bfill: backwards fill
+
+            
+        Returns
+        ----------
+        beta_rolled_df DataFrame
         """
 
         regAttr = self.regAttr
@@ -96,23 +127,26 @@ class RegPipe:
         - beta_df: DataFrame containing sensitivities of dependent to independent
         """
 
-        ## Join the two DataFrames so that independent/dependent variables and sensitivities guaranteed to have same index
-        concatTrans = DataFrameConcat( [ df, beta_df ])
+        # Join the two DataFrames so that independent/dependent variables and sensitivities guaranteed to have same index
+        ## Use df_keys so we can separate the two parts later
+        concatTrans = DataFrameConcat( [ df, beta_df ], df_keys=[ "Data", "Sens"])
         common_df = concatTrans.fit_transform(pd.DataFrame())
 
         # Need to be able to separate the joined DataFrame back into it's pieces
         sensAttrs = beta_df.columns.get_level_values(0).unique().tolist()
 
-        rp_df      =  common_df.loc[:, idx["Pct",:]]
-        rp_beta_df =  common_df.loc[:, idx[sensAttrs,:] ]
+        # Separate the joined parts back into the individual components (but now having a common index)
+        rp_df      =  common_df.loc[:, idx["Data",:,:]]
+        rp_df.columns = rp_df.columns.droplevel(0)
+                                       
+                                       
+        rp_beta_df =  common_df.loc[:, idx["Sens",:,:] ]
+        rp_beta_df.columns = rp_beta_df.columns.droplevel(0)
         
         # Create an attribution object
         # Place the data and sensitivities in it
         regAttr = RegAttr(rp_df)
         self.regAttr = regAttr
-
-        # TO DO: redundant: regAttr can derive sensAttrs from the beta_df stored inside
-        regAttr.sensAttrs = sensAttrs
 
 
         # Place the sensitivities into regAttr
@@ -125,27 +159,36 @@ class RegPipe:
 
         # The dependents are derived from those tickers that have sensitivities
         depTickers = regAttr.depTickersFromSensAttrs(sensAttrs)
-        depCols = [ ("Pct", t) for t in depTickers ]
+        depCols = [ (self.attr, t) for t in depTickers ]
 
         regAttr.depCols = depCols
 
         # Add a constant column to the data (for the intercept attribution)
-        regAttr.addConst(("Pct", "1"), 1)
+        regAttr.addConst((self.attr, "1"), 1)
 
         
 
     def attrib(self):
+        """
+        Run the attribution:
+        - attribution of the return (of each column in self.regAttr.depCols)
+        - return is attributed to intercept and the independent variable columns (self.indCols)
+        - return attribution attributed to a variable is based on the sensitivity of the dependent to that variable (based on the sensitivites set by self.regAttr.setSens)
+
+        -- this is usually preceded by a call to self.attrib_setup
+        """
+        
         regAttr = self.regAttr
 
         depCols = regAttr.depCols
-        sensAttrs = regAttr.sensAttrs
         
-        indCols = [ ("Pct", "1"), self.indCol ]
+        indCols_w_intercept = [ c for c in self.indCols ]
+        indCols_w_intercept.insert(0, (self.attr, "1"))
 
         retAttr_df =regAttr.retAttrib(
-            indCols,
-            depCols, 
-            sensAttrs)
+            indCols_w_intercept,
+            depCols
+            )
 
         self.retAttr_df = retAttr_df
 
